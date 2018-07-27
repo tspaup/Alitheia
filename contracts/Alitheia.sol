@@ -1,4 +1,4 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.24;
 
 import "./SafeMath.sol";
 import "./ERC20.sol";
@@ -9,7 +9,7 @@ contract Alitheia is ERC20{
     string public constant symbol = "ALIT";
     string public constant name = "Alitheia";
     uint8 public constant decimals = 18;
-    uint256 _totalSupply = (1000) * (10 ** 18); //1 billion total supply
+    uint256 _totalSupply = (2000) * (10 ** 18); // 2 billion total supply
 
     // Owner of this contract
     address public owner;
@@ -18,15 +18,27 @@ contract Alitheia is ERC20{
     mapping(address => uint256) balances;
   
     // Owner of account approves the transfer of an amount to another account
-    mapping(address => mapping (address => uint256)) allowed;
+    mapping(address => mapping (address => uint256)) internal allowed;
+
+    bool public mintingFinished = false;
 
     modifier onlyOwner() {
         require (msg.sender == owner);
         _;
     }
 
-    function () public payable {}
+    modifier canMint() {
+        require(!mintingFinished);
+        _;
+    }
 
+    modifier hasMintPermission(){
+        require(msg.sender == owner);
+        _;
+    }
+
+    function () public payable {}
+    
     // Constructor
     function Alitheia() public{
         owner = msg.sender;
@@ -40,16 +52,6 @@ contract Alitheia is ERC20{
 
     function balanceOf(address _owner) public view returns (uint256) {
         return balances[_owner];
-    }
-
-    /**
-     * @dev Allows the current owner to transfer control of the contract to a newOwner.
-     * @param newOwner The address to transfer ownership to.
-     */
-    function transferOwnership(address newOwner) public onlyOwner {
-        require(newOwner != address(0) && newOwner != owner);
-        OwnershipTransferred(owner, newOwner);
-        owner = newOwner;
     }
 
     /**
@@ -72,7 +74,7 @@ contract Alitheia is ERC20{
     function approve(address _spender, uint256 _value) public returns (bool) {
         require(_spender != address(0));
         allowed[msg.sender][_spender] = _value;
-        Approval(msg.sender, _spender, _value);
+        emit Approval(msg.sender, _spender, _value);
         return true;
     }
 
@@ -83,7 +85,7 @@ contract Alitheia is ERC20{
      */
     function increaseApproval (address _spender, uint256 _value) public returns (bool success) {
         allowed[msg.sender][_spender] = allowed[msg.sender][_spender].add(_value);
-        Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
+        emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
         return true;
     }
 
@@ -95,7 +97,7 @@ contract Alitheia is ERC20{
             allowed[msg.sender][_spender] = oldValue.sub(_value);
         }
 
-        Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
+        emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
         return true;
     }
 
@@ -113,7 +115,7 @@ contract Alitheia is ERC20{
         balances[_from] = balances[_from].sub(_value);
         balances[_to] = balances[_to].add(_value);
         allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
-        Transfer(_from, _to, _value);
+        emit Transfer(_from, _to, _value);
         return true;
     }
 
@@ -129,7 +131,60 @@ contract Alitheia is ERC20{
 
         balances[msg.sender] = balances[msg.sender].sub(_value);
         balances[_to] = balances[_to].add(_value);
-        Transfer(msg.sender, _to, _value);
+        emit Transfer(msg.sender, _to, _value);
+        return true;
+    }
+
+    /**
+     * @dev Allows the current owner to relinquish control of the contract.
+     * @notice Renouncing to ownership will leave the contract without an owner.
+     * It will not be possible to call the functions with the `onlyOwner`
+     * modifier anymore.
+     */
+    function renounceOwnership() public onlyOwner {
+        emit OwnershipRenounced(owner);
+        owner = address(0);
+    }
+
+    /**
+     * @dev Allows the current owner to transfer control of the contract to a newOwner.
+     * @param _newOwner The address to transfer ownership to.
+     */
+    function transferOwnership(address _newOwner) public onlyOwner {
+        _transferOwnership(_newOwner);
+    }
+
+    /**
+     * @dev Transfers control of the contract to a newOwner.
+     * @param _newOwner The address to transfer ownership to.
+     */
+    function _transferOwnership(address _newOwner) internal {
+        require(_newOwner != address(0));
+        emit OwnershipTransferred(owner, _newOwner);
+        owner = _newOwner;
+    }
+
+    /**
+     * @dev Function to mint tokens
+     * @param _to The address that will receive the minted tokens.
+     * @param _amount The amount of tokens to mint.
+     * @return A boolean that indicates if the operation was successful.
+     */
+    function mint(address _to, uint256 _amount) hasMintPermission canMint public returns (bool){
+        _totalSupply = _totalSupply.add(_amount);
+        balances[_to] = balances[_to].add(_amount);
+        emit Mint(_to, _amount);
+        emit Transfer(address(0), _to, _amount);
+        return true;
+    }
+
+    /**
+     * @dev Function to stop minting new tokens.
+     * @return True if the operation was successful.
+     */
+    function finishMinting() onlyOwner canMint public returns (bool) {
+        mintingFinished = true;
+        emit MintFinished();
         return true;
     }
 }
