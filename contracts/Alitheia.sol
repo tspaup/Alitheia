@@ -2,8 +2,9 @@ pragma solidity ^0.4.24;
 
 import "./SafeMath.sol";
 import "./ERC20.sol";
+import "./DateTime.sol";
 
-contract Alitheia is ERC20{
+contract Alitheia is ERC20, DateTime{
     using SafeMath for uint256;
 
     string public constant symbol = "ALIT";
@@ -19,6 +20,12 @@ contract Alitheia is ERC20{
   
     // Owner of account approves the transfer of an amount to another account
     mapping(address => mapping (address => uint256)) internal allowed;
+
+    // Year -> Month -> Holders
+    mapping(uint => mapping (uint => address[])) private holderGroup;
+
+    // Year -> Month -> Hoder -> Tokens
+    mapping(uint => mapping (unit => mapping(address => uint256))) private tokenGroup;
 
     bool public mintingFinished = false;
 
