@@ -21,11 +21,8 @@ contract Alitheia is ERC20, DateTime{
     // Owner of account approves the transfer of an amount to another account
     mapping(address => mapping (address => uint256)) internal allowed;
 
-    // Year -> Month -> Holders
-    mapping(uint => mapping (uint => address[])) private holderGroup;
-
     // Year -> Month -> Hoder -> Tokens
-    mapping(uint => mapping (unit => mapping(address => uint256))) private tokenGroup;
+    mapping(uint => mapping (unit => mapping(address => uint256))) private holderTokens;
 
     bool public mintingFinished = false;
 
@@ -123,6 +120,37 @@ contract Alitheia is ERC20, DateTime{
         balances[_to] = balances[_to].add(_value);
         allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
         emit Transfer(_from, _to, _value);
+
+        uint year = getYear(now)
+        uint month = getMonth(now)
+
+        if(holderTokens[year][month][_to] == address(0)){
+            holderTokens[year][month][_to] = _value;
+        }else{
+            holderTokens[year][month][_to] = holderTokens[year][month][_to].add(_value);
+        }
+
+        uint256 remaining = _value;
+
+        while(remaining > 0){
+            if(holderTokens[year][month][_from] != address(0) && holderTokens[year][month][_from] != 0){
+                if(remaining > holderTokens[year][month][_from]){
+                    remaining = remaining.sub(holderTokens[year][month][_from]);
+                    holderTokens[year][month][_from] = 0;    
+                }else{
+                    holderTokens[year][month][_from] = holderTokens[year][month][_from].sub(remaining);
+                    remaining = 0;
+                }
+            }
+
+            if(month > 1)
+                month--;
+            else{
+                month = 12;
+                year--;
+            }
+        }
+
         return true;
     }
 
@@ -139,6 +167,16 @@ contract Alitheia is ERC20, DateTime{
         balances[msg.sender] = balances[msg.sender].sub(_value);
         balances[_to] = balances[_to].add(_value);
         emit Transfer(msg.sender, _to, _value);
+
+        uint year = getYear(now);
+        uint month = getMonth(now);
+
+        if(holderTokens[year][month][_to] == address(0)){
+            holderTokens[year][month][_to] = _value;
+        }else{
+            holderTokens[year][month][_to] = holderTokens[year][month][_to].add(_value);
+        }
+
         return true;
     }
 
