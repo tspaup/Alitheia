@@ -10,7 +10,7 @@ contract Alitheia is ERC20, DateTime{
     string public constant symbol = "ALIT";
     string public constant name = "Alitheia";
     uint8 public constant decimals = 18;
-    uint256 _totalSupply = (2000000000) * (10 ** decimals); // 2 billion total supply
+    uint256 _totalSupply = (2000000000) * (10 ** 18); // 2 billion total supply
 
     // Owner of this contract
     address public owner;
@@ -21,8 +21,14 @@ contract Alitheia is ERC20, DateTime{
     // Owner of account approves the transfer of an amount to another account
     mapping(address => mapping (address => uint256)) internal allowed;
 
-    // Year -> Month -> Hoder -> Tokens
+    // Year -> Month -> Holder -> Tokens
     mapping(uint => mapping (uint => mapping(address => uint256))) private holderTokens;
+
+    // Address -> Years
+    mapping(address => uint[]) private holderYears;
+
+    // Address -> Year -> Months
+    mapping(address => mapping (uint => uint[])) private holderMonths;
 
     bool public mintingFinished = false;
 
@@ -48,6 +54,12 @@ contract Alitheia is ERC20, DateTime{
         owner = msg.sender;
         balances[owner] = _totalSupply;
         emit Transfer(0x0, owner, balances[owner]);
+
+        uint year = getYear(now);
+        uint month = getMonth(now);
+
+        holderTokens[year][month][owner] = balances[owner];
+        addYearMonth(owner, year, month);
     }
 
     function totalSupply() public view returns (uint256) {
@@ -58,8 +70,78 @@ contract Alitheia is ERC20, DateTime{
         return balances[_owner];
     }
 
-    function balanceOfGroup(uint year, uint month, address _owner) public view returns (uint256) {
+    function balanceOfGroup(address _owner, uint year, uint month) public view returns (uint256) {
         return holderTokens[year][month][_owner];
+    }
+
+    function yearsOfOwner(address _owner) public view returns (uint[]) {
+        return holderYears[_owner];
+    }
+
+    function monthsOfOwner(address _owner, uint year) public view returns (uint[]) {
+        return holderMonths[_owner][year];
+    }
+
+    function addYearMonth(address _owner, uint year, uint month) public returns (bool) {
+        if(hasYear(_owner, year) == holderYears[_owner].length) // doesn't exist
+            holderYears[_owner].push(year);
+        
+        if(hasMonth(_owner, year, month) == holderMonths[_owner][year].length) // doesn't exist
+            holderMonths[_owner][year].push(month);
+    }
+
+    function removeYearMonth(address _owner, uint year, uint month) public returns (bool) {
+        uint lengthYear = holderYears[_owner].length;
+        uint lengthMonth = holderMonths[_owner][year].length;
+
+        uint foundYearIndex = hasYear(_owner, year);
+        uint foundMonthIndex = hasMonth(_owner, year, month);
+
+        if(foundMonthIndex != lengthMonth){
+            holderMonths[_owner][year][foundMonthIndex] = holderMonths[_owner][year][lengthMonth - 1];
+            holderMonths[_owner][year].length--;
+        }
+
+        if(holderMonths[_owner][year].length == 0){
+            if(foundYearIndex != lengthYear){
+                holderYears[_owner][foundYearIndex] = holderYears[_owner][lengthYear - 1];
+                holderYears[_owner].length--;
+            }
+        }
+
+        return true;
+    }
+
+    function hasYear(address _owner, uint year) public view returns (uint) {
+        uint length = holderYears[_owner].length;
+        uint index = 0;
+
+        if(length == 0)
+            return length;
+
+        while(holderYears[_owner][index] != year){
+            index++;
+        }
+        
+        if(index < length)
+            return index;
+        return length;
+    }
+
+    function hasMonth(address _owner, uint year, uint month) public view returns (uint) {
+        uint length = holderMonths[_owner][year].length;
+        uint index = 0;
+
+        if(length == 0)
+            return length;
+
+        while(holderMonths[_owner][year][index] != month){
+            index++;
+        }
+
+        if(index < length)
+            return index;
+        return length;
     }
 
     /**
@@ -133,25 +215,33 @@ contract Alitheia is ERC20, DateTime{
         else
             holderTokens[year][month][_to] = holderTokens[year][month][_to].add(_value);
 
+        addYearMonth(_to, year, month);
+
         uint256 remaining = _value;
+        uint indexYear = holderYears[_from].length - 1; // Last
+        uint indexMonth = holderMonths[_from][holderYears[_from][indexYear]].length - 1; // Last
 
         while(remaining > 0){
-            if(holderTokens[year][month][_from] != 0){
-                if(remaining > holderTokens[year][month][_from]){
-                    remaining = remaining.sub(holderTokens[year][month][_from]);
-                    holderTokens[year][month][_from] = 0;    
+            uint tempYear = holderYears[_from][indexYear];
+            uint tempMonth = holderMonths[_from][year][indexMonth];
+
+            if(holderTokens[tempYear][tempMonth][_from] != 0){
+                if(remaining > holderTokens[tempYear][tempMonth][_from]){
+                    remaining = remaining.sub(holderTokens[tempYear][tempMonth][_from]);
+                    holderTokens[tempYear][tempMonth][_from] = 0;
+
+                    removeYearMonth(_from, tempYear, tempMonth);
                 }else{
-                    holderTokens[year][month][_from] = holderTokens[year][month][_from].sub(remaining);
+                    holderTokens[tempYear][tempMonth][_from] = holderTokens[tempYear][tempMonth][_from].sub(remaining);
                     remaining = 0;
                 }
             }
 
-            if(month > 1)
-                month--;
-            else{
-                month = 12;
-                year--;
-            }
+            if(indexMonth == 0){
+                indexYear--;
+                indexMonth = holderMonths[_from][holderYears[_from][indexYear]].length - 1;
+            }else
+                indexMonth--;
         }
 
         return true;
