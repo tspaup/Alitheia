@@ -10,7 +10,7 @@ contract Alitheia is ERC20, DateTime{
     string public constant symbol = "ALIT";
     string public constant name = "Alitheia";
     uint8 public constant decimals = 18;
-    uint256 _totalSupply = (2000) * (10 ** 18); // 2 billion total supply
+    uint256 _totalSupply = (2000000000) * (10 ** decimals); // 2 billion total supply
 
     // Owner of this contract
     address public owner;
@@ -22,7 +22,7 @@ contract Alitheia is ERC20, DateTime{
     mapping(address => mapping (address => uint256)) internal allowed;
 
     // Year -> Month -> Hoder -> Tokens
-    mapping(uint => mapping (unit => mapping(address => uint256))) private holderTokens;
+    mapping(uint => mapping (uint => mapping(address => uint256))) private holderTokens;
 
     bool public mintingFinished = false;
 
@@ -44,10 +44,10 @@ contract Alitheia is ERC20, DateTime{
     function () public payable {}
     
     // Constructor
-    function Alitheia() public{
+    constructor() public{
         owner = msg.sender;
         balances[owner] = _totalSupply;
-        Transfer(0x0, owner, balances[owner]);
+        emit Transfer(0x0, owner, balances[owner]);
     }
 
     function totalSupply() public view returns (uint256) {
@@ -56,6 +56,10 @@ contract Alitheia is ERC20, DateTime{
 
     function balanceOf(address _owner) public view returns (uint256) {
         return balances[_owner];
+    }
+
+    function balanceOfGroup(uint year, uint month, address _owner) public view returns (uint256) {
+        return holderTokens[year][month][_owner];
     }
 
     /**
@@ -121,19 +125,18 @@ contract Alitheia is ERC20, DateTime{
         allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
         emit Transfer(_from, _to, _value);
 
-        uint year = getYear(now)
-        uint month = getMonth(now)
+        uint year = getYear(now);
+        uint month = getMonth(now);
 
-        if(holderTokens[year][month][_to] == address(0)){
+        if(holderTokens[year][month][_to] == 0)
             holderTokens[year][month][_to] = _value;
-        }else{
+        else
             holderTokens[year][month][_to] = holderTokens[year][month][_to].add(_value);
-        }
 
         uint256 remaining = _value;
 
         while(remaining > 0){
-            if(holderTokens[year][month][_from] != address(0) && holderTokens[year][month][_from] != 0){
+            if(holderTokens[year][month][_from] != 0){
                 if(remaining > holderTokens[year][month][_from]){
                     remaining = remaining.sub(holderTokens[year][month][_from]);
                     holderTokens[year][month][_from] = 0;    
@@ -171,11 +174,10 @@ contract Alitheia is ERC20, DateTime{
         uint year = getYear(now);
         uint month = getMonth(now);
 
-        if(holderTokens[year][month][_to] == address(0)){
+        if(holderTokens[year][month][_to] == 0)
             holderTokens[year][month][_to] = _value;
-        }else{
+        else
             holderTokens[year][month][_to] = holderTokens[year][month][_to].add(_value);
-        }
 
         return true;
     }
@@ -183,7 +185,7 @@ contract Alitheia is ERC20, DateTime{
     /**
      * @dev Allows the current owner to relinquish control of the contract.
      * @notice Renouncing to ownership will leave the contract without an owner.
-     * It will not be possible to call the functions with the `onlyOwner`
+     * It will not be possible to call the functions with the onlyOwner
      * modifier anymore.
      */
     function renounceOwnership() public onlyOwner {
