@@ -10,7 +10,7 @@ contract Alitheia is ERC20, DateTime{
     string public constant symbol = "ALIT";
     string public constant name = "Alitheia";
     uint8 public constant decimals = 18;
-    uint256 _totalSupply = (2000000000) * (10 ** 18); // 2 billion total supply
+    uint256 _totalSupply = (100000000) * (10 ** 18); //  1000 million total supply
 
     // Owner of this contract
     address public owner;
@@ -30,6 +30,7 @@ contract Alitheia is ERC20, DateTime{
     // Address -> Year -> Months
     mapping(address => mapping (uint => uint[])) private holderMonths;
 
+    
     bool public mintingFinished = false;
 
     modifier onlyOwner() {
@@ -74,15 +75,47 @@ contract Alitheia is ERC20, DateTime{
         return holderTokens[year][month][_owner];
     }
 
+    function yearsOfOwnerLength(address _owner) public view returns (uint) {
+        return holderYears[_owner].length;
+    }
+
     function yearsOfOwner(address _owner) public view returns (uint[]) {
         return holderYears[_owner];
+    }
+
+    function yearOfOwnerByIndex(address _owner, uint index) public view returns (uint) {
+        uint length = yearsOfOwnerLength(_owner);
+
+        if(length == 0)
+            return 0;
+
+        if(index >= length)
+            index = length - 1;
+
+        return holderYears[_owner][index];
+    }
+
+    function monthsOfOwnerLength(address _owner, uint year) public view returns (uint) {
+        return holderMonths[_owner][year].length;
     }
 
     function monthsOfOwner(address _owner, uint year) public view returns (uint[]) {
         return holderMonths[_owner][year];
     }
 
-    function addYearMonth(address _owner, uint year, uint month) public returns (bool) {
+    function monthOfOwnerByIndex(address _owner, uint year, uint index) public view returns (uint) {
+        uint length = monthsOfOwnerLength(_owner, year);
+
+        if(length == 0)
+            return 0;
+
+        if(index >= length)
+            index = length - 1;
+
+        return holderMonths[_owner][year][index];
+    }
+
+    function addYearMonth(address _owner, uint year, uint month) private returns (bool) {
         if(hasYear(_owner, year) == holderYears[_owner].length) // doesn't exist
             holderYears[_owner].push(year);
         
@@ -90,7 +123,7 @@ contract Alitheia is ERC20, DateTime{
             holderMonths[_owner][year].push(month);
     }
 
-    function removeYearMonth(address _owner, uint year, uint month) public returns (bool) {
+    function removeYearMonth(address _owner, uint year, uint month) private returns (bool) {
         uint lengthYear = holderYears[_owner].length;
         uint lengthMonth = holderMonths[_owner][year].length;
 
@@ -268,6 +301,8 @@ contract Alitheia is ERC20, DateTime{
             holderTokens[year][month][_to] = _value;
         else
             holderTokens[year][month][_to] = holderTokens[year][month][_to].add(_value);
+
+        addYearMonth(_to, year, month);
 
         return true;
     }
