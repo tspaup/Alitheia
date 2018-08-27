@@ -1,12 +1,9 @@
 pragma solidity ^0.4.24;
 
-import "./SafeMath.sol";
-import "./Mint.sol";
+import "./MintToken.sol";
 import "./DateTime.sol";
 
-contract Alitheia is Mint, DateTime{
-    using SafeMath for uint256;
-
+contract Alitheia is MintToken, DateTime{
     struct Package{
         uint256 amount;
         uint timestamp;
@@ -120,47 +117,31 @@ contract Alitheia is Mint, DateTime{
         return index;
     }
 
-    // Function that is called when a user or another contract wants to transfer funds
-    function transfer(address _to, uint256 _value, bytes _data, string _custom_fallback) public returns (bool){  
-        require(_to != address(0));
-        require(_value <= balances[msg.sender]);
-        require(_value > 0);
-
-        if(isContract(_to)){
-            balances[msg.sender] = balances[msg.sender].sub(_value);
-            balances[_to] = balances[_to].add(_value);
-            assert(_to.call.value(0)(bytes4(keccak256(_custom_fallback)), msg.sender, _value, _data));
-            emit Transfer(msg.sender, _to, _value, _data);
-            return true;
-        }else
-            return transferToAddress(_to, _value, _data);
-    }
-
     // Function that is called when a user or another contract wants to transfer funds .
-    function transfer(address _to, uint256 _value, bytes _data) public returns (bool) {
+    function transfer(address _to, uint256 _amount, bytes _data) public returns (bool) {
         require(_to != address(0));
-        require(_value <= balances[msg.sender]);
-        require(_value > 0);
+        require(_amount <= balances[msg.sender]);
+        require(_amount > 0);
 
         if(isContract(_to))
-            return transferToContract(_to, _value, _data);
+            return transferToContract(_to, _amount, _data);
         else
-            return transferToAddress(_to, _value, _data);
+            return transferToAddress(_to, _amount, _data);
     }
 
     // Standard function transfer similar to ERC20 transfer with no _data .
     // Added due to backwards compatibility reasons .
-    function transfer(address _to, uint256 _value) public returns (bool) {      
+    function transfer(address _to, uint256 _amount) public returns (bool) {      
         require(_to != address(0));
-        require(_value <= balances[msg.sender]);
-        require(_value > 0);
+        require(_amount <= balances[msg.sender]);
+        require(_amount > 0);
 
         bytes memory empty;
 
         if(isContract(_to))
-            return transferToContract(_to, _value, empty);
+            return transferToContract(_to, _amount, empty);
         else
-            return transferToAddress(_to, _value, empty);
+            return transferToAddress(_to, _amount, empty);
     }
 
     //assemble the given address bytecode. If bytecode exists then the _addr is a contract.
@@ -174,22 +155,22 @@ contract Alitheia is Mint, DateTime{
     }
 
     //function that is called when transaction target is an address
-    function transferToAddress(address _to, uint256 _value, bytes _data) private returns (bool){
-        if (balanceOf(msg.sender) < _value) revert();
-        balances[msg.sender] = balances[msg.sender].sub(_value);
-        balances[_to] = balances[_to].add(_value);
-        emit Transfer(msg.sender, _to, _value, _data);
+    function transferToAddress(address _to, uint256 _amount, bytes _data) private returns (bool){
+        if (balanceOf(msg.sender) < _amount) revert();
+        balances[msg.sender] = balances[msg.sender].sub(_amount);
+        balances[_to] = balances[_to].add(_amount);
+        emit Transfer(msg.sender, _to, _amount, _data);
         return true;
     }
 
     //function that is called when transaction target is a contract
-    function transferToContract(address _to, uint256 _value, bytes _data) private returns (bool){
-        if (balanceOf(msg.sender) < _value) revert();
-        balances[msg.sender] = balances[msg.sender].sub(_value);
-        balances[_to] = balances[_to].add(_value);
+    function transferToContract(address _to, uint256 _amount, bytes _data) private returns (bool){
+        if (balanceOf(msg.sender) < _amount) revert();
+        balances[msg.sender] = balances[msg.sender].sub(_amount);
+        balances[_to] = balances[_to].add(_amount);
         ERC223_ContractReceiver receiver = ERC223_ContractReceiver(_to);
-        receiver.tokenFallback(msg.sender, _value, _data);
-        emit Transfer(msg.sender, _to, _value, _data);
+        receiver.tokenFallback(msg.sender, _amount, _data);
+        emit Transfer(msg.sender, _to, _amount, _data);
         return true;
     }
 }
