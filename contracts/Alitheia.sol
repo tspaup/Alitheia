@@ -111,7 +111,6 @@ contract Alitheia is MintToken, DateTime{
 
     function removeTokenData(address _owner, uint256 amount) private returns (bool){
         uint256 _amount = amount;
-        bool flag = false;
 
         if(holderYears[_owner].length > 0){
             for(uint yearIndex = 0; yearIndex < holderYears[_owner].length; yearIndex++){
@@ -125,60 +124,65 @@ contract Alitheia is MintToken, DateTime{
                             for(uint dayIndex = 0; dayIndex < holderDays[_owner][year][month].length; dayIndex++){
                                 uint day = holderDays[_owner][year][month][dayIndex];
 
-                                uint packageLength = holderTokens[_owner][year][month][day].packages.length;
-                                if(packageLength > 0){
-                                    bool packageFlag = true;
-                                    uint packageIndex = 0;
+                                _amount = iteratePackageByDay(_owner, year, month, day, _amount);
 
-                                    while(packageFlag){
-                                        if(packageIndex >= packageLength)
-                                            packageFlag = false;
-                                        else{
-                                            Package memory _package = holderTokens[_owner][year][month][day].packages[packageIndex];
-
-                                            if(_package.lockedUntil <= now && _amount > 0){
-                                                if(_package.amount > _amount){
-                                                    _amount = 0;
-                                                    _package.amount = _package.amount.sub(_amount);
-                                                    
-                                                    /* Adjust Package Amount */
-                                                    holderTokens[_owner][year][month][day].packages[packageIndex].amount = _package.amount;
-
-                                                    /* Adjust Package Day Amount */
-                                                    holderTokens[_owner][year][month][day].amount = holderTokens[_owner][year][month][day].amount.sub(_amount);
-
-                                                    packageFlag = false;
-                                                    flag = true;
-                                                }else{
-                                                    _amount = _amount.sub(_package.amount);
-
-                                                    /* remove the element */
-                                                    removePackageByIndex(_owner, year, month, day, packageIndex);
-                                                }
-                                            }else{
-                                                packageFlag = false;
-                                                flag = true;
-                                            }
-                                        }
-                                    }
-                                }
-
-                                if(flag)
+                                if(_amount == 0)
                                     break;
                             }
                         }
 
-                        if(flag)
+                        if(_amount == 0)
                             break;
                     }    
                 }
 
-                if(flag)
+                if(_amount == 0)
                     break;
             } // End For
         } // End If
 
         return true;
+    }
+
+    function iteratePackageByDay(address _owner, uint _year, uint _month, uint _day, uint256 amount) private returns (uint256){
+        uint256 _amount = amount;
+        uint packageLength = holderTokens[_owner][_year][_month][_day].packages.length;
+        if(packageLength > 0){
+            bool packageFlag = true;
+            uint index = 0;
+
+            while(packageFlag){
+                if(index >= packageLength)
+                    packageFlag = false;
+                else{
+                    if(holderTokens[_owner][_year][_month][_day].packages[index].lockedUntil <= now && _amount > 0){
+                        if(holderTokens[_owner][_year][_month][_day].packages[index].amount > _amount){
+                            _amount = 0;
+                            holderTokens[_owner][_year][_month][_day].packages[index].amount = holderTokens[_owner][_year][_month][_day].packages[index].amount.sub(_amount);
+                            
+                            /* Adjust Package Amount */
+                            holderTokens[_owner][_year][_month][_day].packages[index].amount = holderTokens[_owner][_year][_month][_day].packages[index].amount;
+
+                            /* Adjust Package Day Amount */
+                            holderTokens[_owner][_year][_month][_day].amount = holderTokens[_owner][_year][_month][_day].amount.sub(_amount);
+
+                            packageFlag = false;
+                        }else{
+                            _amount = _amount.sub(holderTokens[_owner][_year][_month][_day].packages[index].amount);
+
+                            /* remove the element */
+                            removePackageByIndex(_owner, _year, _month, _day, index);
+                            packageLength--;
+                        }
+                    }else{
+                        packageFlag = false;
+                        _amount = 0; // No need to check further
+                    }
+                }
+            }
+        }
+
+        return _amount;
     }
 
     function removePackageByIndex(address _owner, uint _year, uint _month, uint _day, uint _index) private returns (bool){
@@ -358,18 +362,17 @@ contract Alitheia is MintToken, DateTime{
         require(_amount <= balances[msg.sender]);
         require(_amount > 0);
 
-        bool result = false;
-        if(isContract(_to))
-            result = transferToContract(_to, _amount, _data);
-        else
-            result = transferToAddress(_to, _amount, _data);
-
-        if(result){
-            removeTokenData(msg.sender, _amount);
-            addTokenData(_to, _amount, now);
+        if(isContract(_to)){
+            if(transferToContract(_to, _amount, _data))
+                removeTokenData(msg.sender, _amount);
+        }else{
+            if(transferToAddress(_to, _amount, _data)){
+                removeTokenData(msg.sender, _amount);
+                addTokenData(_to, _amount, now);
+            }
         }
 
-        return result;
+        return true;
     }
 
     // Standard function transfer similar to ERC20 transfer with no _data .
@@ -381,16 +384,33 @@ contract Alitheia is MintToken, DateTime{
 
         bytes memory empty;
 
-        bool result = false;
-        if(isContract(_to))
-            result = transferToContract(_to, _amount, empty);
-        else
-            result = transferToAddress(_to, _amount, empty);
+        if(isContract(_to)){
+            if(transferToContract(_to, _amount, empty))
+                removeTokenData(msg.sender, _amount);
+        }else{
+            if(transferToAddress(_to, _amount, empty)){
+                removeTokenData(msg.sender, _amount);
+                addTokenData(_to, _amount, now);
+            }
+        }
         
-        if(result)
-            addTokenData(_to, _amount, now);
+        return true;
+    }
 
-        return result;
+    /**
+     * @dev Function to mint tokens
+     * @param _to The address that will receive the minted tokens.
+     * @param _amount The amount of tokens to mint.
+     * @return A boolean that indicates if the operation was successful.
+     */
+    function mint(address _to, uint256 _amount) hasMintPermission canMint public returns (bool){
+        _totalSupply = _totalSupply.add(_amount);
+        balances[_to] = balances[_to].add(_amount);
+        emit Mint(_to, _amount);
+        
+        bytes memory empty;
+        emit Transfer(msg.sender, _to, _amount, empty);
+        return true;
     }
 
     //assemble the given address bytecode. If bytecode exists then the _addr is a contract.
