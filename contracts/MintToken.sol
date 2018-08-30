@@ -16,8 +16,7 @@ contract MintToken is Ownable, ERC223_ContractReceiver{
     event Mint(address indexed to, uint256 amount);
     event MintFinished();
     event Transfer(address indexed _from, address indexed _to, uint256 _amount, bytes _data);
-    event Transfer(address indexed _from, address indexed _to, uint256 _amount);
-
+    
     function totalSupply() public view returns (uint256) {
         return _totalSupply;
     }

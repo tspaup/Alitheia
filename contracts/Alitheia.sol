@@ -4,15 +4,24 @@ import "./MintToken.sol";
 import "./DateTime.sol";
 
 contract Alitheia is MintToken, DateTime{
+    /* Not Minted Tokens */
     struct Package{
         uint256 amount;
         uint timestamp;
         uint lockedUntil;
     }
 
+    /* Minted Tokens */
+    struct PackageMinted{
+        uint256 amount;
+        uint timestamp;
+    }
+
+    /* Both of Packages Per Day */
     struct PackageDay{
         uint256 amount;
         Package[] packages;
+        PackageMinted[] packagesMinted;
     }
 
     string public constant symbol = "ALIT";
@@ -21,7 +30,13 @@ contract Alitheia is MintToken, DateTime{
 
     uint256 public unitPrice = (20) * (10 ** 4); // Decimal 4
 
-    /* Contract Variables */
+    /* Balance Variables */
+        // Existence
+        mapping(address => bool) holderExist;
+
+        // Addresses
+        address[] private holders;
+
         // Address -> Years
         mapping(address => uint[]) private holderYears;
 
@@ -32,16 +47,40 @@ contract Alitheia is MintToken, DateTime{
         mapping(address => mapping (uint => mapping (uint => uint[]))) private holderDays;
 
         // Address -> Year -> Month -> Day -> PackageDay
-        mapping(address => mapping (uint => mapping (uint => mapping (uint => PackageDay)))) private holderTokens;
+        mapping(address => mapping (uint => mapping (uint => mapping (uint => PackageDay)))) private holderTokens; 
+    /* Balance Variables End */
+
+    /* Interest Variables */
+        // Last Paid Year
+        mapping(address => uint) private interestYear;
+
+        // Last Paid Month
+        mapping(address => uint) private interestMonth;
+
+        // Address -> Year -> Month -> Amount
+        mapping(address => mapping (uint => mapping (uint => uint256))) private interestTokens;
+    /* Interest Variables End */
+
+    /* Contract Variables */
+        // Creation Year
+        uint private contractYear;
+
+        // Creation Month
+        uint private contractMonth;
     /* Contract Variables End */
 
     function () public payable {}
     
     // Constructor
     constructor() public{
+        bytes memory empty;
         owner = msg.sender;
         balances[owner] = _totalSupply;
-        emit Transfer(0x0, owner, balances[owner]);
+
+        contractYear = getYear(now);
+        contractMonth = getMonth(now);
+
+        emit Transfer(0x0, owner, balances[owner], empty);
     }
 
     modifier onlyUnlocked(uint256 _amount){
@@ -109,185 +148,43 @@ contract Alitheia is MintToken, DateTime{
         return amount;
     }
 
-    function removeTokenData(address _owner, uint256 amount) private returns (bool){
-        uint256 _amount = amount;
+    function addTokenData(address _owner, uint256 amount, uint timestamp, bool _minted) private returns (bool){
+        if(!holderExist[_owner]){
+            holderExist[_owner] = true;
+            holders.push(_owner);
+        }
 
-        if(holderYears[_owner].length > 0){
-            for(uint yearIndex = 0; yearIndex < holderYears[_owner].length; yearIndex++){
-                uint year = holderYears[_owner][yearIndex];
-                
-                if(holderMonths[_owner][year].length > 0){
-                    for(uint monthIndex = 0; monthIndex < holderMonths[_owner][year].length; monthIndex++){
-                        uint month = holderMonths[_owner][year][monthIndex];
+        if(_minted)
+            return addMintedTokenData(_owner, amount, timestamp);
+        else
+            return addNormalTokenData(_owner, amount, timestamp);
+    }
 
-                        if(holderDays[_owner][year][month].length > 0){
-                            for(uint dayIndex = 0; dayIndex < holderDays[_owner][year][month].length; dayIndex++){
-                                uint day = holderDays[_owner][year][month][dayIndex];
+    function addMintedTokenData(address _owner, uint256 amount, uint timestamp) private returns (bool){
+        uint year = getYear(timestamp);
+        uint month = getMonth(timestamp);
+        uint day = getDay(timestamp);
 
-                                _amount = iteratePackageByDay(_owner, year, month, day, _amount);
+        /* Year doesn't exist */
+        if(getYearIndex(_owner, year) == holderYears[_owner].length)
+            holderYears[_owner].push(year);
 
-                                if(_amount == 0)
-                                    break;
-                            }
-                        }
+        /* Month doesn't exist */
+        if(getMonthIndex(_owner, year, month) == holderMonths[_owner][year].length)
+            holderMonths[_owner][year].push(month);
 
-                        if(_amount == 0)
-                            break;
-                    }    
-                }
-
-                if(_amount == 0)
-                    break;
-            } // End For
-        } // End If
+        /* Day doesn't exist */
+        if(getDayIndex(_owner, year, month, day) == holderDays[_owner][year][month].length)
+            holderDays[_owner][year][month].push(day);
+    
+        /* Saving Tokens to the variable */
+        holderTokens[_owner][year][month][day].amount.add(amount);
+        holderTokens[_owner][year][month][day].packagesMinted.push(PackageMinted(amount, timestamp));
 
         return true;
     }
 
-    function iteratePackageByDay(address _owner, uint _year, uint _month, uint _day, uint256 amount) private returns (uint256){
-        uint256 _amount = amount;
-        uint packageLength = holderTokens[_owner][_year][_month][_day].packages.length;
-        if(packageLength > 0){
-            bool packageFlag = true;
-            uint index = 0;
-
-            while(packageFlag){
-                if(index >= packageLength)
-                    packageFlag = false;
-                else{
-                    if(holderTokens[_owner][_year][_month][_day].packages[index].lockedUntil <= now && _amount > 0){
-                        if(holderTokens[_owner][_year][_month][_day].packages[index].amount > _amount){
-                            _amount = 0;
-                            holderTokens[_owner][_year][_month][_day].packages[index].amount = holderTokens[_owner][_year][_month][_day].packages[index].amount.sub(_amount);
-                            
-                            /* Adjust Package Amount */
-                            holderTokens[_owner][_year][_month][_day].packages[index].amount = holderTokens[_owner][_year][_month][_day].packages[index].amount;
-
-                            /* Adjust Package Day Amount */
-                            holderTokens[_owner][_year][_month][_day].amount = holderTokens[_owner][_year][_month][_day].amount.sub(_amount);
-
-                            packageFlag = false;
-                        }else{
-                            _amount = _amount.sub(holderTokens[_owner][_year][_month][_day].packages[index].amount);
-
-                            /* remove the element */
-                            removePackageByIndex(_owner, _year, _month, _day, index);
-                            packageLength--;
-                        }
-                    }else{
-                        packageFlag = false;
-                        _amount = 0; // No need to check further
-                    }
-                }
-            }
-        }
-
-        return _amount;
-    }
-
-    function removePackageByIndex(address _owner, uint _year, uint _month, uint _day, uint _index) private returns (bool){
-        uint length = holderTokens[_owner][_year][_month][_day].packages.length;
-
-        if(_index < length){
-            uint256 amount = holderTokens[_owner][_year][_month][_day].amount;
-
-            if(_index != length - 1){
-                for(uint i = _index; i < length - 1; i++){
-                    holderTokens[_owner][_year][_month][_day].packages[i] = holderTokens[_owner][_year][_month][_day].packages[i+1];
-                }
-            }
-
-            delete holderTokens[_owner][_year][_month][_day].packages[length - 1];
-            holderTokens[_owner][_year][_month][_day].packages.length--;
-
-            /* Adjust Package Day amount */
-            holderTokens[_owner][_year][_month][_day].amount = holderTokens[_owner][_year][_month][_day].amount.sub(amount);
-
-            /* Check and Adjust Year, Month, Day variables */
-            if(holderTokens[_owner][_year][_month][_day].packages.length == 0 || holderTokens[_owner][_year][_month][_day].amount == 0){
-                delete holderTokens[_owner][_year][_month][_day];
-
-                removeDayByValue(_owner, _year, _month, _day);
-                if(holderDays[_owner][_year][_month].length == 0){
-                    delete holderDays[_owner][_year][_month];
-
-                    removeMonthByValue(_owner, _year, _month);
-                    if(holderMonths[_owner][_year].length == 0){
-                        delete holderMonths[_owner][_year];
-
-                        removeYearByValue(_owner, _year);
-                        if(holderYears[_owner].length == 0)
-                            delete holderYears[_owner];
-                    }
-                }
-            }
-        }
-
-        return true;
-    }
-
-    function removeYearByValue(address _owner, uint _year) private returns (bool){
-        uint length = holderYears[_owner].length;
-
-        if(length > 0){
-            uint index = getYearIndex(_owner, _year);
-
-            if(index >= 0 && index < length){
-                if(index != length - 1){
-                    for(uint i = index; i < length - 1; i++){
-                        holderYears[_owner][i] = holderYears[_owner][i+1];
-                    }
-                }
-
-                delete holderYears[_owner][length - 1];
-                holderYears[_owner].length--;
-            }
-        }   
-    }
-
-    function removeMonthByValue(address _owner, uint _year, uint _month) private returns (bool){
-        uint length = holderMonths[_owner][_year].length;
-
-        if(length > 0){
-            uint index = getMonthIndex(_owner, _year, _month);
-
-            if(index >= 0 && index < length){
-                if(index != length - 1){
-                    for(uint i = index; i < length - 1; i++){
-                        holderMonths[_owner][_year][i] = holderMonths[_owner][_year][i+1];
-                    }
-                }
-
-                delete holderMonths[_owner][_year][length - 1];
-                holderMonths[_owner][_year].length--;
-            }
-        }
-
-        return true;
-    }
-
-    function removeDayByValue(address _owner, uint _year, uint _month, uint _day) private returns (bool){
-        uint length = holderDays[_owner][_year][_month].length;
-
-        if(length > 0){
-            uint index = getDayIndex(_owner, _year, _month, _day);
-
-            if(index >= 0 && index < length){
-                if(index != length - 1){
-                    for(uint i = index; i < length - 1; i++){
-                        holderDays[_owner][_year][_month][i] = holderDays[_owner][_year][_month][i+1];
-                    }
-                }
-
-                delete holderDays[_owner][_year][_month][length - 1];
-                holderDays[_owner][_year][_month].length--;
-            }
-        }
-
-        return true;
-    }
-
-    function addTokenData(address _owner, uint256 amount, uint timestamp) private returns (bool){
+    function addNormalTokenData(address _owner, uint256 amount, uint timestamp) private returns (bool){
         uint year = getYear(timestamp);
         uint month = getMonth(timestamp);
         uint day = getDay(timestamp);
@@ -309,6 +206,8 @@ contract Alitheia is MintToken, DateTime{
         /* Saving Tokens to the variable */
         holderTokens[_owner][year][month][day].amount.add(amount);
         holderTokens[_owner][year][month][day].packages.push(Package(amount, timestamp, lockTime));
+
+        return true;
     }
 
     /* Get the index of the year from variable */
@@ -359,42 +258,53 @@ contract Alitheia is MintToken, DateTime{
     // Function that is called when a user or another contract wants to transfer funds .
     function transfer(address _to, uint256 _amount, bytes _data) onlyUnlocked(_amount) public returns (bool) {
         require(_to != address(0));
-        require(_amount <= balances[msg.sender]);
         require(_amount > 0);
 
-        if(isContract(_to)){
-            if(transferToContract(_to, _amount, _data))
-                removeTokenData(msg.sender, _amount);
-        }else{
-            if(transferToAddress(_to, _amount, _data)){
-                removeTokenData(msg.sender, _amount);
-                addTokenData(_to, _amount, now);
-            }
-        }
+        bool minted = false;
 
-        return true;
+        if(msg.sender == owner) // Normal transaction
+            minted = false;
+        else // Mostly transaction between holders
+            minted = true;
+
+        if(isContract(_to)){
+            return transferToContract(_to, _amount, _data, minted);
+        }else{
+            if(transferToAddress(_to, _amount, _data, minted)){
+                if(_to == owner)
+                    return true;
+                else
+                    return addTokenData(_to, _amount, now, minted);
+            }else
+                return false;
+        }
     }
 
     // Standard function transfer similar to ERC20 transfer with no _data .
     // Added due to backwards compatibility reasons .
-    function transfer(address _to, uint256 _amount) public returns (bool) {      
+    function transfer(address _to, uint256 _amount) onlyUnlocked(_amount) public returns (bool) {      
         require(_to != address(0));
-        require(_amount <= balances[msg.sender]);
         require(_amount > 0);
 
         bytes memory empty;
+        bool minted = false;
+        
+        if(msg.sender == owner) // Normal transaction
+            minted = false;
+        else // Mostly transaction between holders
+            minted = true;
 
         if(isContract(_to)){
-            if(transferToContract(_to, _amount, empty))
-                removeTokenData(msg.sender, _amount);
+            return transferToContract(_to, _amount, empty, minted);
         }else{
-            if(transferToAddress(_to, _amount, empty)){
-                removeTokenData(msg.sender, _amount);
-                addTokenData(_to, _amount, now);
-            }
+            if(transferToAddress(_to, _amount, empty, minted)){
+                if(_to == owner)
+                    return true;
+                else
+                    return addTokenData(_to, _amount, now, minted);
+            }else
+                return false;
         }
-        
-        return true;
     }
 
     /**
@@ -406,6 +316,10 @@ contract Alitheia is MintToken, DateTime{
     function mint(address _to, uint256 _amount) hasMintPermission canMint public returns (bool){
         _totalSupply = _totalSupply.add(_amount);
         balances[_to] = balances[_to].add(_amount);
+
+        if(_to != owner && !isContract(_to))
+            addTokenData(_to, _amount, now, true);
+
         emit Mint(_to, _amount);
         
         bytes memory empty;
@@ -424,21 +338,32 @@ contract Alitheia is MintToken, DateTime{
     }
 
     //function that is called when transaction target is an address
-    function transferToAddress(address _to, uint256 _amount, bytes _data) private returns (bool){
-        if (balanceOf(msg.sender) < _amount) revert();
-        balances[msg.sender] = balances[msg.sender].sub(_amount);
+    function transferToAddress(address _to, uint256 _amount, bytes _data, bool _minted) private returns (bool){
+        if(!_minted)
+            balances[msg.sender] = balances[msg.sender].sub(_amount);
+        
         balances[_to] = balances[_to].add(_amount);
+
+        if(_minted)
+            _totalSupply = _totalSupply.add(_amount);
+
         emit Transfer(msg.sender, _to, _amount, _data);
         return true;
     }
 
     //function that is called when transaction target is a contract
-    function transferToContract(address _to, uint256 _amount, bytes _data) private returns (bool){
-        if (balanceOf(msg.sender) < _amount) revert();
-        balances[msg.sender] = balances[msg.sender].sub(_amount);
+    function transferToContract(address _to, uint256 _amount, bytes _data, bool _minted) private returns (bool){
+        if(!_minted)
+            balances[msg.sender] = balances[msg.sender].sub(_amount);
+        
         balances[_to] = balances[_to].add(_amount);
+
+        if(_minted)
+            _totalSupply = _totalSupply.add(_amount);
+
         ERC223_ContractReceiver receiver = ERC223_ContractReceiver(_to);
         receiver.tokenFallback(msg.sender, _amount, _data);
+        
         emit Transfer(msg.sender, _to, _amount, _data);
         return true;
     }
