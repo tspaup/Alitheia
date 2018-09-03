@@ -37,6 +37,12 @@ contract Alitheia is MintToken, DateTime{
         // Addresses
         address[] private holders;
 
+        // Year -> Month -> Address -> Bool
+        mapping(uint => mapping (uint => mapping (address => bool))) private groupedHolderExist;
+
+        // Year -> Month -> Addresses
+        mapping(uint => mapping (uint => address[])) private groupedHolders;
+
         // Address -> Years
         mapping(address => uint[]) private holderYears;
 
@@ -51,6 +57,9 @@ contract Alitheia is MintToken, DateTime{
     /* Balance Variables End */
 
     /* Interest Variables */
+        // At least once paid
+        mapping(address => bool) private interestPaid;
+
         // Last Paid Year
         mapping(address => uint) private interestYear;
 
@@ -148,11 +157,32 @@ contract Alitheia is MintToken, DateTime{
         return amount;
     }
 
-    function addTokenData(address _owner, uint256 amount, uint timestamp, bool _minted) private returns (bool){
+    // Just save all holders
+    function addHolder(address _owner) private returns (bool){
         if(!holderExist[_owner]){
             holderExist[_owner] = true;
             holders.push(_owner);
         }
+
+        return true;
+    }
+
+    // Grouping Holders
+    function addGroupedHolder(address _owner, uint timestamp) private returns (bool){
+        uint year = getYear(timestamp);
+        uint month = getMonth(timestamp);
+
+        if(!groupedHolderExist[year][month][_owner]){
+            groupedHolderExist[year][month][_owner] = true;
+            groupedHolders[year][month].push(_owner);
+        }
+
+        return true;
+    }
+
+    function addTokenData(address _owner, uint256 amount, uint timestamp, bool _minted) private returns (bool){
+        addHolder(_owner);
+        addGroupedHolder(_owner, timestamp);
 
         if(_minted)
             return addMintedTokenData(_owner, amount, timestamp);
@@ -255,6 +285,83 @@ contract Alitheia is MintToken, DateTime{
         return index;
     }
 
+    // Clear Interests
+    function clearInterests(address _owner, uint timestamp) private returns (bool){
+        uint endYear = getYear(timestamp);
+        uint endMonth = getMonth(timestamp);
+
+        if(endMonth == 1){
+            endMonth = 12;
+            endYear--;
+        }else
+            endMonth--;
+
+        if(contractYear > endYear || (contractYear == endYear && contractMonth >= endMonth)){
+            return true;
+        }else{
+            uint startYear = 0;
+            uint startMonth = 0;
+
+            if(!interestPaid[_owner]){
+                startYear = contractYear;
+                startMonth = contractMonth;
+            }else{
+                if(interestYear[_owner] > endYear || (interestYear[_owner] == endYear && interestMonth[_owner] >= endMonth)){
+                    return true;
+                }else{
+                    if(interestMonth[_owner] == 12){
+                        startYear = interestYear[_owner] + 1;
+                        startMonth = 1;
+                    }else{
+                        startYear = interestYear[_owner];
+                        startMonth = interestMonth[_owner] + 1;
+                    }
+                }
+            }
+
+            bool flag = true;
+            while(flag){
+                clearOneInterest(_owner, startYear, startMonth);
+
+                if(startMonth == 12){
+                    startMonth = 1;
+                    startYear++;
+                }else
+                    startMonth++;
+
+                if(startYear > endYear || (startYear == endYear && startMonth > endMonth))
+                    flag = false;
+            }
+        }
+    }
+
+    // Clear One Interest
+    function clearOneInterest(address _owner, uint year, uint month) private returns (bool) {
+        /*if(holderDays[_owner][year][month].length > 0){
+            uint daysMonth = getDaysInMonth(month, year);
+            uint daysYear = getDaysInYear(year);
+
+            for(uint i = 0; i < holderDays[_owner][year][month].length; i++){
+                uint day = holderDays[_owner][year][month][i];
+
+                if(holderTokens[_owner][year][month][day].packages.length > 0){
+                    for(uint j = 0; j < holderTokens[_owner][year][month][day].packages; j++){
+                        Package memory _package = holderTokens[_owner][year][month][day].packages[j];
+
+
+                    }
+                }
+            }
+        }*/
+
+        if(!interestPaid[_owner])
+            interestPaid[_owner] = true;
+        interestYear[_owner] = year;
+        interestMonth[_owner] = month;
+
+        return true;
+    }
+
     // Function that is called when a user or another contract wants to transfer funds .
     function transfer(address _to, uint256 _amount, bytes _data) onlyUnlocked(_amount) public returns (bool) {
         require(_to != address(0));
@@ -264,8 +371,11 @@ contract Alitheia is MintToken, DateTime{
 
         if(msg.sender == owner) // Normal transaction
             minted = false;
-        else // Mostly transaction between holders
+        else{ // Mostly transaction between holders
             minted = true;
+            
+            clearInterests(msg.sender, now);
+        }
 
         if(isContract(_to)){
             return transferToContract(_to, _amount, _data, minted);

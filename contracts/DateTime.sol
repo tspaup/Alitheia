@@ -45,6 +45,13 @@ contract DateTime {
         return year / 4 - year / 100 + year / 400;
     }
 
+    function getDaysInYear(uint16 year) public pure returns (uint) {
+        if(isLeapYear(year))
+            return 366;
+        else
+            return 365;
+    }
+
     function getDaysInMonth(uint8 month, uint16 year) public pure returns (uint8) {
         if (month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12) {
             return 31;
