@@ -1,6 +1,8 @@
 pragma solidity ^0.4.24;
 
-contract ERC223_ContractReceiver{
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+
+contract ERC223_ContractReceiver is Ownable{
 	struct TX{
 		address sender;
 		uint256 value;

@@ -30,6 +30,8 @@ contract Alitheia is MintToken, DateTime{
 
     uint256 public unitPrice = (20) * (10 ** 4); // Decimal 4
 
+    float public cola = 2;
+
     /* Balance Variables */
         // Existence
         mapping(address => bool) holderExist;
@@ -337,10 +339,7 @@ contract Alitheia is MintToken, DateTime{
 
     // Clear One Interest
     function clearOneInterest(address _owner, uint year, uint month) private returns (bool) {
-        /*if(holderDays[_owner][year][month].length > 0){
-            uint daysMonth = getDaysInMonth(month, year);
-            uint daysYear = getDaysInYear(year);
-
+        if(holderDays[_owner][year][month].length > 0){
             for(uint i = 0; i < holderDays[_owner][year][month].length; i++){
                 uint day = holderDays[_owner][year][month][i];
 
@@ -348,11 +347,11 @@ contract Alitheia is MintToken, DateTime{
                     for(uint j = 0; j < holderTokens[_owner][year][month][day].packages; j++){
                         Package memory _package = holderTokens[_owner][year][month][day].packages[j];
 
-
+                        
                     }
                 }
             }
-        }*/
+        }
 
         if(!interestPaid[_owner])
             interestPaid[_owner] = true;
@@ -360,6 +359,20 @@ contract Alitheia is MintToken, DateTime{
         interestMonth[_owner] = month;
 
         return true;
+    }
+
+    // Calculate Daily Interest
+    function calculateDailyInterest(address _owner, uint year, uint month, uint day) private returns (uint256) {
+        uint amount = 0;
+        
+        if(holderTokens[_owner][year][month][day].amount > 0){
+            uint daysMonth = getDaysInMonth(month, year);
+            uint daysYear = getDaysInYear(year);
+
+            uint daysHeld = daysMonth - day;
+        }
+
+        return amount;
     }
 
     // Function that is called when a user or another contract wants to transfer funds .
