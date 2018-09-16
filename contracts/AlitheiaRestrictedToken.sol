@@ -1,6 +1,5 @@
 pragma solidity ^0.4.24;
 
-import "./WhiteListInterface.sol";
 import "./ERC223_ContractReceiver.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
@@ -15,14 +14,11 @@ contract AlitheiaRestrictedToken is ERC223_ContractReceiver{
   uint public constant decimals = 18;
   uint public constant INITIAL_SUPPLY = 1.5 * 10**9;
 
-  address whiteListAddress;
-
   /* Events */
   event Transfer(address indexed _from, address indexed _to, uint256 _amount, bytes _data);
   event Burn(address indexed burner, uint256 value);
 
-  constructor (address _whiteListAddress) public {
-    whiteListAddress = _whiteListAddress;
+  constructor () public {
     totalSupply_ = INITIAL_SUPPLY * (10 ** decimals);
     balances[msg.sender] = totalSupply_;
   }
@@ -46,17 +42,5 @@ contract AlitheiaRestrictedToken is ERC223_ContractReceiver{
 
     emit Burn(_address, _amount);
     emit Transfer(_address, address(0), _amount, empty);
-  }
-
-  function whiteList() public view returns (WhiteListInterface) {
-    return WhiteListInterface(whiteListAddress);
-  }
-
-  function checkTransferAllowed(address _from, address _to) public view returns (uint) {
-    return whiteList().checkTransferAllowed(_from, _to);
-  }
-
-  function restrictionCodeToMessage(uint restrictionCode) public view returns (string message) {
-    return whiteList().restrictionCodeToMessage(restrictionCode);   
   }
 }

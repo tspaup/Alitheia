@@ -43,7 +43,7 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
         mapping(address => mapping (uint => mapping (uint => mapping (uint => PackageDay)))) private holderTokens;
     /* Token Variables End */
 
-	constructor (address _whiteListAddress) public AlitheiaRestrictedToken(_whiteListAddress) {}
+	constructor () public {}
 
     /* Clear Unlocked Balance */
     function clearUnlockedBalanceOf(address _address, uint timestamp) private returns (uint256){
@@ -195,7 +195,6 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
     }
 
     function addTokenData(address _address, uint256 _amount, uint timestamp) private{
-        whiteList().addToBothSendAndReceiveAllowed(_address);
         addHolder(_address);
 
         uint year = getYear(timestamp);
