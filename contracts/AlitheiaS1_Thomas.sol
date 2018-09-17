@@ -6,12 +6,6 @@ import "./AlitheiaToken.sol";
 contract AlitheiaS1 is AlitheiaToken, DateTime{
     uint256 pointMultiplier = 10e18;
 
-    // Existence
-    mapping(address => bool) private holderExist;
-
-    // Addresses
-    address[] private holders;
-    
     /* Dividend Variables Start */
         struct DividendEvent {
             uint256 amount;
@@ -60,14 +54,6 @@ contract AlitheiaS1 is AlitheiaToken, DateTime{
     function balanceOf(address _address) public view returns (uint256) {
         uint256 dividendOwed = calculateDividendOwed(_address);
         return balances[_address] + dividendOwed;
-    }
-
-    // Add Holder
-    function addHolder(address _address) private {
-        if(!holderExist[_address]){
-            holderExist[_address] = true;
-            holders.push(_address);
-        }
     }
 
     // Calculate Owed Dividend
@@ -179,9 +165,6 @@ contract AlitheiaS1 is AlitheiaToken, DateTime{
         else
             result = transferToAddress(_to, _amount, _data);
     
-        if(result && _to != owner)
-            addHolder(_to);
-
         return result;
     }
 
@@ -228,9 +211,6 @@ contract AlitheiaS1 is AlitheiaToken, DateTime{
         else
             result = transferToAddress(_to, _amount, empty);
     
-        if(result && _to != owner)
-            addHolder(_to);
-
         return result;
     }
 

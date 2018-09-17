@@ -17,12 +17,6 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
         Package[] packages;
     }
 
-    // Holder Addresses
-   	address[] private holders;
-
-   	// Holder Existence
-   	mapping(address => bool) holderExist;
-
     /* Token Variables */
         // Address -> Years
         mapping(address => uint[]) private holderYears;
@@ -50,7 +44,7 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
         uint256 amount = 0;
         bool flag = false;
 
-        if(!holderExist[_address] || holderYears[_address].length == 0)
+        if(holderYears[_address].length == 0)
             return amount;
 
         for(uint yearIndex = 0; yearIndex < holderYears[_address].length; yearIndex++){
@@ -169,13 +163,6 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
 
         return amount;
     }
-
-	function addHolder(address _address) private{
-		if(!holderExist[_address]){
-			holderExist[_address] = true;
-			holders.push(_address);
-		}
-	}
 
     function addTime(address _address, uint _year, uint _month, uint _day) private{
         if(!holderYearExist[_address][_year]){
