@@ -97,7 +97,7 @@ contract AlitheiaS1 is AlitheiaToken, DateTime{
     // Create Dividend Event
     function createDividendEvent(uint256 amount) onlyOwner public returns (uint256) {
         uint256 newCurrentGlobalDividendEventId = ++currentGlobalDividendEventId;
-        totalSupply_.add(amount);
+        totalSupply_ = totalSupply_.add(amount);
 
         dividendEvents[newCurrentGlobalDividendEventId] = DividendEvent(amount, (totalSupply_ + restrictedContract().totalSupply()));
 
@@ -107,7 +107,7 @@ contract AlitheiaS1 is AlitheiaToken, DateTime{
     // Create Interest Event
     function createInterestEvent(uint256 amount) onlyOwner public returns (uint256) {
         uint256 newCurrentGlobalInterestEventId = ++currentGlobalInterestEventId;
-        totalSupply_.add(amount);
+        totalSupply_ = totalSupply_.add(amount);
 
         interestEvents[newCurrentGlobalInterestEventId] = InterestEvent(amount, (totalSupply_ + restrictedContract().totalSupply()));
 
@@ -121,6 +121,16 @@ contract AlitheiaS1 is AlitheiaToken, DateTime{
 
         balances[_to] = balances[_to].add(_amount);
         emit Mint(_to, _amount);
+        return true;
+    }
+
+    // Called by project contracts to payout custom amounts
+    function customPayout(uint256 _amount) onlyArbiter public returns (bool) {
+        require(_amount > 0);
+
+        totalSupply_ = totalSupply_.add(_amount);
+        balances[msg.sender] = balances[msg.sender].add(_amount);
+        emit Mint(msg.sender, _amount);
         return true;
     }
 

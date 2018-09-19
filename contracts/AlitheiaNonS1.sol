@@ -149,7 +149,7 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
             }
         }
 
-        holderTokens[_address][_year][_month][_day].amount.sub(holderTokens[_address][_year][_month][_day].packages[_index].amount);
+        holderTokens[_address][_year][_month][_day].amount = holderTokens[_address][_year][_month][_day].amount.sub(holderTokens[_address][_year][_month][_day].packages[_index].amount);
             
         holderTokens[_address][_year][_month][_day].packages.length--;
     }
@@ -182,8 +182,6 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
     }
 
     function addTokenData(address _address, uint256 _amount, uint timestamp) private{
-        addHolder(_address);
-
         uint year = getYear(timestamp);
         uint month = getMonth(timestamp);
         uint day = getDay(timestamp);
@@ -193,7 +191,7 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
         uint lockTime = timestamp + 2 * 365 * 1 days;
 
         /* Saving Tokens to the variable */
-        holderTokens[_address][year][month][day].amount.add(_amount);
+        holderTokens[_address][year][month][day].amount = holderTokens[_address][year][month][day].amount.add(_amount);
         holderTokens[_address][year][month][day].packages.push(Package(_amount, timestamp, lockTime));
     }
 
