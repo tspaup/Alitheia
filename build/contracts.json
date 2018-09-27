@@ -1,7 +1,7 @@
 {
-  "WhitelistedStorage": "0x2e58a3e5e5b11ab8a20ef0fe8c380aeee3a301c3",
-  "NonS1Token": "0xe8bfde0c6461bef2bd37ad579ed2a39ed81d8125",
-  "S1Token": "0x439cf2b4a6b097703dd5acaaf60c154809fd93da",
-  "Project Delegate": "0x5345f6fcf3c75c702a6d1bbd131a8dde752ae9b6",
-  "Project Proxy": "0x445a59f2286650949c2e8240036958535ea6cd67"
+  "WhitelistedStorage": "0xf963a0e25f4c4914dd25d1530b34c6a00d01e23c",
+  "NonS1Token": "0x8e021f455dc5c36f8731e2ccd9b2722d9ea2c6d8",
+  "S1Token": "0xdbcd4a710b03b61c59ed1680f43ee25086f7f854",
+  "Project Delegate": "0x4792e4931c35979f6708d1a017d0b0bfee06cf03",
+  "Project Proxy": "0x786abdec9f96f4409fab01bc7a787a268b4c3f76"
 }

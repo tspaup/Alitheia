@@ -5,7 +5,6 @@ import { hasEvent } from './helpers/event'
 const AlitheiaNonS1 = artifacts.require('AlitheiaNonS1')
 const AlitheiaS1 = artifacts.require('AlitheiaS1')
 
-
 contract('AlitheiaS1', () => {
   let accounts, nonS1Token, s1Token
   beforeEach(async () => {

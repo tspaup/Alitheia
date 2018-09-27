@@ -279,4 +279,19 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
         emit Transfer(msg.sender, _to, _amount, _data);
         return true;
     }
+
+    //function to get holder years
+    function getHolderYears(address _address) onlyOwner public view returns (uint[]) {
+        return holderYears[_address];
+    }
+
+    //function to get holder months from year
+    function getHolderMonths(address _address, uint _year) onlyOwner public view returns (uint[]) {
+        return holderMonths[_address][_year];
+    }
+
+    //function to get holder days from year and month
+    function getHolderDays(address _address, uint _year, uint _month) onlyOwner public view returns (uint[]) {
+        return holderDays[_address][_year][_month];
+    }
 }
