@@ -3,6 +3,13 @@ pragma solidity ^0.4.24;
 import "./KeyValueStorage.sol";
 
 contract BaseStorage is KeyValueStorage {
+  
+  bool publicStorageEnabled;
+  mapping(address => bool) public _whitelistedSenders;
+
+  constructor () public {
+    publicStorageEnabled = true;
+  }
 
   /// @dev Only allow access if senderIsValid() is true
   modifier isAllowed {
@@ -153,11 +160,13 @@ contract BaseStorage is KeyValueStorage {
 
   /// @return true if sender is valid
   function senderIsValid() private view returns (bool) {
+    if(!publicStorageEnabled)
+      return _whitelistedSenders[msg.sender];
     return true;
   }
 
   /// @return the key possibly hashed with another value such as msg.sender
   function scopedKey(bytes32 key) internal view returns(bytes32) {
-    return key;
+    return keccak256(abi.encodePacked(msg.sender, key));
   }
 }
