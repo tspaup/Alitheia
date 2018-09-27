@@ -6,7 +6,7 @@ import "./Storage/WhiteListedStorage.sol";
 contract ProjectProxy is OwnableProxy {
 
   constructor(
-    WhiteListedStorage storage_,
+    WhitelistedStorage storage_,
     address projectDelegateAddress,
     address S1TokenAddress,
     address nonS1TokenAddress
@@ -16,14 +16,6 @@ contract ProjectProxy is OwnableProxy {
   {
     storage_.setAddress(keccak256(abi.encodePacked("S1TokenAddress")), S1TokenAddress);
     storage_.setAddress(keccak256(abi.encodePacked("nonS1TokenAddress")), nonS1TokenAddress);
-  }
-
-  function getS1TokenAddress() public view returns (address) {
-    return _storage_.getAddress(keccak256(abi.encodePacked("S1TokenAddress")));
-  }
-
-  function getNonS1TokenAddress() public view returns (address) {
-    return _storage_.setAddress(keccak256(abi.encodePacked("nonS1TokenAddress")));
   }
 
   struct TX{

@@ -8,8 +8,14 @@ contract WhitelistedStorage is BaseStorage, Ownable {
   mapping(address => bool) public _whitelistedSenders;
   bool publicStorageEnabled;
 
-  constructor() {
+  constructor () public {
     publicStorageEnabled = true;
+  }
+
+  function senderIsValid() private view returns (bool) {
+    if(!publicStorageEnabled)
+      return _whitelistedSenders[msg.sender];
+    return true;
   }
 
   function enablePublicStorage() public onlyOwner {
@@ -26,15 +32,6 @@ contract WhitelistedStorage is BaseStorage, Ownable {
 
   function removeSender(address sender) public onlyOwner {
     delete _whitelistedSenders[sender];
-  }
-
-  function senderIsValid() private view returns (bool) {
-    if(publicStorageEnabled) {
-      return true;
-    } else {
-      return _whitelistedSenders[msg.sender];
-    }
-    
   }
 
   function scopedKey(bytes32 key) internal view returns(bytes32) {

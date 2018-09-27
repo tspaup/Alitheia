@@ -1,0 +1,177 @@
+{
+  "contractName": "StorageStateful",
+  "abi": [],
+  "bytecode": "0x6080604052348015600f57600080fd5b50603580601d6000396000f3006080604052600080fd00a165627a7a72305820941814c74e5f0aa333c52fe73581fb68bc9e143f83a41898c4f19eccf33f44110029",
+  "deployedBytecode": "0x6080604052600080fd00a165627a7a72305820941814c74e5f0aa333c52fe73581fb68bc9e143f83a41898c4f19eccf33f44110029",
+  "sourceMap": "64:52:21:-;;;;8:9:-1;5:2;;;30:1;27;20:12;5:2;64:52:21;;;;;;;",
+  "deployedSourceMap": "64:52:21:-;;;;;",
+  "source": "pragma solidity ^0.4.24;\n\nimport \"../Storage/BaseStorage.sol\";\n\ncontract StorageStateful {\n  BaseStorage _storage;\n}\n",
+  "sourcePath": "/Projects/Alitheia/contracts/StorageConsumer/StorageStateful.sol",
+  "ast": {
+    "absolutePath": "/Projects/Alitheia/contracts/StorageConsumer/StorageStateful.sol",
+    "exportedSymbols": {
+      "StorageStateful": [
+        6655
+      ]
+    },
+    "id": 6656,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 6651,
+        "literals": [
+          "solidity",
+          "^",
+          "0.4",
+          ".24"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:24:21"
+      },
+      {
+        "absolutePath": "/Projects/Alitheia/contracts/Storage/BaseStorage.sol",
+        "file": "../Storage/BaseStorage.sol",
+        "id": 6652,
+        "nodeType": "ImportDirective",
+        "scope": 6656,
+        "sourceUnit": 6396,
+        "src": "26:36:21",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "id": 6655,
+        "linearizedBaseContracts": [
+          6655
+        ],
+        "name": "StorageStateful",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "constant": false,
+            "id": 6654,
+            "name": "_storage",
+            "nodeType": "VariableDeclaration",
+            "scope": 6655,
+            "src": "93:20:21",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_contract$_BaseStorage_$6395",
+              "typeString": "contract BaseStorage"
+            },
+            "typeName": {
+              "contractScope": null,
+              "id": 6653,
+              "name": "BaseStorage",
+              "nodeType": "UserDefinedTypeName",
+              "referencedDeclaration": 6395,
+              "src": "93:11:21",
+              "typeDescriptions": {
+                "typeIdentifier": "t_contract$_BaseStorage_$6395",
+                "typeString": "contract BaseStorage"
+              }
+            },
+            "value": null,
+            "visibility": "internal"
+          }
+        ],
+        "scope": 6656,
+        "src": "64:52:21"
+      }
+    ],
+    "src": "0:117:21"
+  },
+  "legacyAST": {
+    "absolutePath": "/Projects/Alitheia/contracts/StorageConsumer/StorageStateful.sol",
+    "exportedSymbols": {
+      "StorageStateful": [
+        6655
+      ]
+    },
+    "id": 6656,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 6651,
+        "literals": [
+          "solidity",
+          "^",
+          "0.4",
+          ".24"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:24:21"
+      },
+      {
+        "absolutePath": "/Projects/Alitheia/contracts/Storage/BaseStorage.sol",
+        "file": "../Storage/BaseStorage.sol",
+        "id": 6652,
+        "nodeType": "ImportDirective",
+        "scope": 6656,
+        "sourceUnit": 6396,
+        "src": "26:36:21",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "id": 6655,
+        "linearizedBaseContracts": [
+          6655
+        ],
+        "name": "StorageStateful",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "constant": false,
+            "id": 6654,
+            "name": "_storage",
+            "nodeType": "VariableDeclaration",
+            "scope": 6655,
+            "src": "93:20:21",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_contract$_BaseStorage_$6395",
+              "typeString": "contract BaseStorage"
+            },
+            "typeName": {
+              "contractScope": null,
+              "id": 6653,
+              "name": "BaseStorage",
+              "nodeType": "UserDefinedTypeName",
+              "referencedDeclaration": 6395,
+              "src": "93:11:21",
+              "typeDescriptions": {
+                "typeIdentifier": "t_contract$_BaseStorage_$6395",
+                "typeString": "contract BaseStorage"
+              }
+            },
+            "value": null,
+            "visibility": "internal"
+          }
+        ],
+        "scope": 6656,
+        "src": "64:52:21"
+      }
+    ],
+    "src": "0:117:21"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.4.24+commit.e67f0147.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "2.0.1",
+  "updatedAt": "2018-09-27T02:01:28.795Z"
+}

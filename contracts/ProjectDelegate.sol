@@ -2,13 +2,22 @@ pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./Proxy/OwnableKeyed.sol";
+import "./AlitheiaS1.sol";
 
 contract ProjectDelegate is OwnableKeyed {
 
-  constructor(WhiteListedStorage storage_) OwnableKeyed(storage_) {}
+  constructor(BaseStorage storage_) public OwnableKeyed(storage_) {}
 
-  function s1Token() public view returns (s1TokenInterface) {
-    return s1TokenInterface(S1TokenAddress);
+  function s1Token() public view returns (AlitheiaS1) {
+    return AlitheiaS1(getS1TokenAddress());
+  }
+
+  function getS1TokenAddress() public view returns (address) {
+    return _storage.getAddress(keccak256(abi.encodePacked("S1TokenAddress")));
+  }
+
+  function getNonS1TokenAddress() public view returns (address) {
+    return _storage.getAddress(keccak256(abi.encodePacked("nonS1TokenAddress")));
   }
 
   function setNAV(uint256 amount, uint256 day, uint256 month, uint256 year) public onlyOwner {
@@ -20,11 +29,11 @@ contract ProjectDelegate is OwnableKeyed {
   }
 
   function getLatestNAVIpfs() public view returns (string) {
-    _storage.getString(keccak256(abi.encodePacked("IPFSHash", _type, day, month, year)));
+    _storage.getString(keccak256(abi.encodePacked("IPFSHash", "NAV", getDatedMetricLastDay("NAV"), getDatedMetricLastMonth("NAV"), getDatedMetricLastYear("NAV"))));
   }
 
   function getLatestNAV() public view returns (uint256) {
-    return _storage.getUint(keccak256(abi.encodePacked("datedMetric", "NAV", getDatedMetricLastDay("NAV"), getDatedMetricLastMonth("NAV"), getDatedMetricLastyear("NAV"))));
+    return _storage.getUint(keccak256(abi.encodePacked("datedMetric", "NAV", getDatedMetricLastDay("NAV"), getDatedMetricLastMonth("NAV"), getDatedMetricLastYear("NAV"))));
   }
 
   function setCustomDatedMetric(string _type, uint256 amount, uint256 day, uint256 month, uint256 year) public onlyOwner {

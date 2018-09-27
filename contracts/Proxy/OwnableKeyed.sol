@@ -27,7 +27,7 @@ contract OwnableKeyed is StorageConsumer {
    */
   function transferOwnership(address newOwner) public onlyOwner {
     require(newOwner != address(0));
-    OwnershipTransferred(getOwner(), newOwner);
+    emit OwnershipTransferred(getOwner(), newOwner);
     setOwner(newOwner);
   }
 

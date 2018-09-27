@@ -17,6 +17,8 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
         Package[] packages;
     }
 
+    address internal S1TokenAddress;
+
     /* Token Variables */
         // Address -> Years
         mapping(address => uint[]) private holderYears;
@@ -38,6 +40,15 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
     /* Token Variables End */
 
 	constructor () public {}
+
+    modifier onlyS1TokenContract { 
+        require (msg.sender == S1TokenAddress); 
+        _; 
+    }
+    
+    function setS1TokenAddress(address _address) onlyOwner public {
+        S1TokenAddress = _address;
+    }
 
     /* Clear Unlocked Balance */
     function clearUnlockedBalanceOf(address _address, uint timestamp) private returns (uint256){
@@ -67,7 +78,6 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
                     
                     for(uint i = 0; i < holderTokens[_address][year][month][day].packages.length; i++){
                         if(holderTokens[_address][year][month][day].packages[i].lockedUntil <= timestamp){
-                            amount = amount.add(holderTokens[_address][year][month][day].packages[i].amount);
 
                             /* Clear Tokens */
                             clearPackage(_address, year, month, day, i);
@@ -86,6 +96,8 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
                                     }
                                 }
                             }
+                            
+                            amount = amount.add(holderTokens[_address][year][month][day].packages[i].amount);
                         }else
                             flag = true;
 
@@ -155,13 +167,15 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
     }
 
     /* Clear Available Non S1 Tokens */
-    function clearAvailableTokens() public returns (uint256){
-        uint256 amount = clearUnlockedBalanceOf(msg.sender, now);
-        
-        if(amount > 0)        
-            burn(msg.sender, amount);
+    function clearAvailableTokens(address _address) onlyS1TokenContract public returns (uint256){
+        uint256 amount = clearUnlockedBalanceOf(_address, now);
 
-        return amount;
+        if(amount > 0) {
+            _burn(msg.sender, amount);
+            return amount;
+        } else {
+            return 0;       
+        }
     }
 
     function addTime(address _address, uint _year, uint _month, uint _day) private{

@@ -50,37 +50,63 @@ contract AlitheiaS1 is AlitheiaToken, DateTime{
         currentGlobalInterestEventId = 0;
     }
 
+    function getCurrentGlobalDividendEventId() public view returns (uint256) {
+        return currentGlobalDividendEventId;
+    }
+
+    function getDividendEventIdForAddress(address _address) public view returns (uint256) {
+        return dividendEventIdForAddress[_address];
+    }
+
+    function getInterestEventIdForAddress(address _address) public view returns (uint256) {
+        return interestEventIdForAddress[_address];
+    }
+
+    function getAmountForDividendId(uint256 id) public view returns (uint256) {
+        return dividendEvents[id].amount;
+    }
+
+    function getTotalSupplyAtEventForDividendId(uint256 id) public view returns (uint256) {
+        return dividendEvents[id].totalSupplyAtEvent;
+    }
+
     // Customized BalanceOf Function
     function balanceOf(address _address) public view returns (uint256) {
         uint256 dividendOwed = calculateDividendOwed(_address);
-        return balances[_address] + dividendOwed;
+        uint256 interestOwed = calculateInterestOwed(_address);
+        return balances[_address] + dividendOwed + interestOwed;
+    }
+
+    // Includes NonS1 Tokens
+    function totalBalanceOf(address _address) public view returns (uint256) {
+        return balanceOf(_address) + restrictedContract().balanceOf(_address);
     }
 
     // Calculate Owed Dividend
-    function calculateDividendOwed(address _address) private view returns (uint256) {
+    function calculateDividendOwed(address _address) public view returns (uint256) {
         uint256 currentDividendEventId = dividendEventIdForAddress[_address];
 
-        // If no data assume all dividends were paid
-        if(currentDividendEventId == 0 || currentDividendEventId == currentGlobalDividendEventId)
+        // If current == global assume all dividends were paid
+        if(currentDividendEventId == currentGlobalDividendEventId)
             return 0;
 
         uint256 currentBalance = balances[_address] + restrictedContract().balanceOf(_address);
 
-        currentDividendEventId++; // Since current dividend is already paid we need to skip to the next dividend event
+        currentDividendEventId += 1; // Since current dividend is already paid we need to skip to the next dividend event
 
         for (currentDividendEventId; currentDividendEventId <= currentGlobalDividendEventId; currentDividendEventId++) {
-            currentBalance = currentBalance + (((dividendEvents[currentDividendEventId].amount * pointMultiplier) / dividendEvents[currentDividendEventId].totalSupplyAtEvent) * (currentBalance / pointMultiplier));
+            currentBalance += (((dividendEvents[currentDividendEventId].amount * pointMultiplier) / dividendEvents[currentDividendEventId].totalSupplyAtEvent) * currentBalance) / pointMultiplier;
         }
 
         return currentBalance - (balances[_address] + restrictedContract().balanceOf(_address));
     }
 
     // Calculate Owed Interest
-    function calculateInterestOwed(address _address) private view returns (uint256) {
+    function calculateInterestOwed(address _address) public view returns (uint256) {
         uint256 currentInterestEventId = interestEventIdForAddress[_address];
 
-        // If no data assume all interest were paid
-        if(currentInterestEventId == 0 || currentInterestEventId == currentGlobalDividendEventId)
+        // If current == global assume all interest were paid
+        if(currentInterestEventId == currentGlobalDividendEventId)
             return 0;
 
         uint256 currentBalance = balances[_address] + restrictedContract().balanceOf(_address);
@@ -88,25 +114,24 @@ contract AlitheiaS1 is AlitheiaToken, DateTime{
         currentInterestEventId += 1; // Since current interest is already paid we need to skip to the next interest event
 
         for (currentInterestEventId; currentInterestEventId <= currentGlobalInterestEventId; currentInterestEventId++) {
-            currentBalance = currentBalance + (((interestEvents[currentInterestEventId].amount * pointMultiplier) / interestEvents[currentInterestEventId].totalSupplyAtEvent) * (currentBalance / pointMultiplier));
+            currentBalance = currentBalance + (((interestEvents[currentInterestEventId].amount * pointMultiplier) / interestEvents[currentInterestEventId].totalSupplyAtEvent) * currentBalance) / pointMultiplier;
         }
 
         return currentBalance - (balances[_address] + restrictedContract().balanceOf(_address));
     }
 
     // Create Dividend Event
-    function createDividendEvent(uint256 amount) onlyOwner public returns (uint256) {
-        uint256 newCurrentGlobalDividendEventId = ++currentGlobalDividendEventId;
+    function createDividendEvent(uint256 amount) onlyArbOrOwner public returns (uint256) {
+        uint256 newCurrentGlobalDividendEventId = currentGlobalDividendEventId += 1;
         totalSupply_ = totalSupply_.add(amount);
 
         dividendEvents[newCurrentGlobalDividendEventId] = DividendEvent(amount, (totalSupply_ + restrictedContract().totalSupply()));
-
         return newCurrentGlobalDividendEventId;
     }
 
     // Create Interest Event
-    function createInterestEvent(uint256 amount) onlyOwner public returns (uint256) {
-        uint256 newCurrentGlobalInterestEventId = ++currentGlobalInterestEventId;
+    function createInterestEvent(uint256 amount) onlyArbOrOwner public returns (uint256) {
+        uint256 newCurrentGlobalInterestEventId = currentGlobalInterestEventId += 1;
         totalSupply_ = totalSupply_.add(amount);
 
         interestEvents[newCurrentGlobalInterestEventId] = InterestEvent(amount, (totalSupply_ + restrictedContract().totalSupply()));
@@ -134,6 +159,19 @@ contract AlitheiaS1 is AlitheiaToken, DateTime{
         return true;
     }
 
+    // Will burn Non S1 tokens and mint and credit equivalent S1 Tokens
+    function convertNonS1Tokens() public returns (uint256) {
+        uint256 amount = restrictedContract().clearAvailableTokens(msg.sender);
+        if (amount > 0) {
+            totalSupply_ = totalSupply_.add(amount);
+            balances[msg.sender] = balances[msg.sender].add(amount);
+            emit Mint(msg.sender, amount);
+            return amount;
+        } else {
+            return 0;
+        }
+    }
+
     // Function that is called when a user or another contract wants to transfer funds .
     function transfer(address _to, uint256 _amount, bytes _data) public returns (bool) {
         require(_to != address(0));
@@ -143,12 +181,14 @@ contract AlitheiaS1 is AlitheiaToken, DateTime{
         /* Dividend */
         if(msg.sender != owner){
             uint256 senderDividendOwed = calculateDividendOwed(msg.sender);
+            dividendEventIdForAddress[msg.sender] = currentGlobalDividendEventId;
             if(senderDividendOwed > 0)
                 customMint(msg.sender, senderDividendOwed);
         }
 
         if(_to != owner){
             uint256 receiverDividendOwed = calculateDividendOwed(_to);
+            dividendEventIdForAddress[_to] = currentGlobalDividendEventId;
             if(receiverDividendOwed > 0)
                 customMint(_to, receiverDividendOwed);
         }
@@ -157,12 +197,14 @@ contract AlitheiaS1 is AlitheiaToken, DateTime{
         /* Interest */
         if(msg.sender != owner){
             uint256 senderInterestOwed = calculateInterestOwed(msg.sender);
+            interestEventIdForAddress[msg.sender] = currentGlobalInterestEventId;
             if(senderInterestOwed > 0)
                 customMint(msg.sender, senderInterestOwed);
         }
 
         if(_to != owner){
             uint256 receiverInterestOwed = calculateInterestOwed(_to);
+            interestEventIdForAddress[_to] = currentGlobalInterestEventId;
             if(receiverInterestOwed > 0)
                 customMint(_to, receiverInterestOwed);
         }
@@ -188,12 +230,14 @@ contract AlitheiaS1 is AlitheiaToken, DateTime{
         /* Dividend */
         if(msg.sender != owner){
             uint256 senderDividendOwed = calculateDividendOwed(msg.sender);
+            dividendEventIdForAddress[msg.sender] = currentGlobalDividendEventId;
             if(senderDividendOwed > 0)
                 customMint(msg.sender, senderDividendOwed);
         }
 
         if(_to != owner){
             uint256 receiverDividendOwed = calculateDividendOwed(_to);
+            dividendEventIdForAddress[_to] = currentGlobalDividendEventId;
             if(receiverDividendOwed > 0)
                 customMint(_to, receiverDividendOwed);
         }
@@ -202,12 +246,14 @@ contract AlitheiaS1 is AlitheiaToken, DateTime{
         /* Interest */
         if(msg.sender != owner){
             uint256 senderInterestOwed = calculateInterestOwed(msg.sender);
+            interestEventIdForAddress[msg.sender] = currentGlobalInterestEventId;
             if(senderInterestOwed > 0)
                 customMint(msg.sender, senderInterestOwed);
         }
 
         if(_to != owner){
             uint256 receiverInterestOwed = calculateInterestOwed(_to);
+            interestEventIdForAddress[_to] = currentGlobalInterestEventId;
             if(receiverInterestOwed > 0)
                 customMint(_to, receiverInterestOwed);
         }

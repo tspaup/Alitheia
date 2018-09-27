@@ -9,7 +9,7 @@ contract MasterAdmin is MultiSigWallet {
   address nonS1TokenAddress;
   address S1TokenAddress;
 
-  constructor(address[] _owners, uint256 _required, address _nonS1TokenAddress, address _S1TokenAddress) MultiSigWallet(_owners, _required) {
+  constructor(address[] _owners, uint256 _required, address _nonS1TokenAddress, address _S1TokenAddress) public MultiSigWallet(_owners, _required) {
     nonS1TokenAddress = _nonS1TokenAddress;
     S1TokenAddress = _S1TokenAddress;
   }

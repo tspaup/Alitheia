@@ -1,5 +1,3 @@
-require('babel-register')
-require('babel-polyfill')
 /*
  * NB: since truffle-hdwallet-provider 0.0.5 you must wrap HDWallet providers in a 
  * function when declaring them. Failure to do so will cause commands to hang. ex:
@@ -15,21 +13,14 @@ require('babel-polyfill')
  */
 
 module.exports = {
+  // See <http://truffleframework.com/docs/advanced/configuration>
+  // to customize your Truffle configuration!
   networks: {
     development: {
-      host: 'localhost',
-      port: 8545,
-      network_id: '*', // Match any network id
-      gas: 5000000,
-      gasPrice: 5
-    },
-    coverage: {
-      host: 'localhost',
-      network_id: '*',
-      port: 8545,
-      gas: 0xfffffffffff,
-      gasPrice: 0x01
+    	host: "localhost",
+    	port: 8545,
+    	network_id: "*", // Match any network id,
+    	/*gas: 500000*/
     }
-    // rinkeby: getRinkebyConfig()
   }
-}
+};

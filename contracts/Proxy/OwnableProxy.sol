@@ -23,7 +23,7 @@ contract OwnableProxy is OwnableKeyed, BaseProxy {
   function upgradeTo(address impl) public onlyOwner {
     require(implementation() != impl);
     setImplementation(impl);
-    Upgraded(impl);
+    emit Upgraded(impl);
   }
 
   function setImplementation(address implementation_) internal {

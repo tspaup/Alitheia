@@ -14,16 +14,18 @@ contract AlitheiaToken is Arbiter{
 
   string public constant symbol = "ALIT";
   string public constant name = "Alitheia";
-  uint8 public constant decimals = 18;
+  uint public constant decimals = 18;
+  uint public constant INITIAL_SUPPLY = 0;
 
   address restrictedAddress;
 
   /* Events */
   event Transfer(address indexed _from, address indexed _to, uint256 _amount, bytes _data);
+  event Burn(address indexed burner, uint256 value);
   event Mint(address indexed to, uint256 amount);
-  event MintFinished();
 
   constructor (address _restrictedAddress) public {
+    totalSupply_ = INITIAL_SUPPLY * (10 ** decimals);
     balances[msg.sender] = totalSupply_;
 
     restrictedAddress = _restrictedAddress;
@@ -41,29 +43,13 @@ contract AlitheiaToken is Arbiter{
     return balances[_address];
   }
 
-  modifier canMint(){
-    require(!mintingFinished);
-    _;
-  }
-
-  modifier hasMintPermission(){
-    require(msg.sender == owner);
-    _;
-  }
-
-  function finishMinting() onlyOwner canMint public returns (bool) {
-    mintingFinished = true;
-    emit MintFinished();
-    return true;
-  }
-
   /**
    * @dev Function to mint tokens
    * @param _to The address that will receive the minted tokens.
    * @param _amount The amount of tokens to mint.
    * @return A boolean that indicates if the operation was successful.
    */
-  function mint(address _to, uint256 _amount) hasMintPermission canMint public returns (bool){
+  function mint(address _to, uint256 _amount) onlyOwner public returns (bool){
       totalSupply_ = totalSupply_.add(_amount);
       balances[_to] = balances[_to].add(_amount);
 
@@ -72,5 +58,26 @@ contract AlitheiaToken is Arbiter{
       bytes memory empty;
       emit Transfer(msg.sender, _to, _amount, empty);
       return true;
+  }
+
+  /**
+   * @dev Burns a specific amount of tokens.
+   * @param _value The amount of token to be burned.
+   */
+  function burn(uint256 _value) public {
+    _burn(msg.sender, _value);
+  }
+
+  function _burn(address _address, uint256 _amount) internal{
+    require(_amount <= balances[_address]);
+    require(_amount > 0);
+
+    bytes memory empty;
+
+    balances[_address] = balances[_address].sub(_amount);
+    totalSupply_ = totalSupply_.sub(_amount);
+
+    emit Burn(_address, _amount);
+    emit Transfer(_address, address(0), _amount, empty);
   }
 }
