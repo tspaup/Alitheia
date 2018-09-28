@@ -43,7 +43,7 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
 
     modifier onlyS1TokenContract { 
         require (msg.sender == S1TokenAddress); 
-        _; 
+        _;
     }
     
     function setS1TokenAddress(address _address) onlyOwner public {
@@ -169,13 +169,12 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
     /* Clear Available Non S1 Tokens */
     function clearAvailableTokens(address _address) onlyS1TokenContract public returns (uint256){
         uint256 amount = clearUnlockedBalanceOf(_address, now);
-
-        if(amount > 0) {
+        
+        if(amount > 0){
             _burn(msg.sender, amount);
             return amount;
-        } else {
-            return 0;       
-        }
+        }else
+            return 0;
     }
 
     function addTime(address _address, uint _year, uint _month, uint _day) private{
@@ -209,9 +208,31 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
         holderTokens[_address][year][month][day].packages.push(Package(_amount, timestamp, lockTime));
     }
 
+    /**
+     * @dev Function to mint tokens
+     * @param _to The address that will receive the minted tokens.
+     * @param _amount The amount of tokens to mint.
+     * @return A boolean that indicates if the operation was successful.
+     */
+    function mint(address _to, uint256 _amount) onlyOwner public returns (bool){
+        require(_to != address(0));
+        totalSupply_ = totalSupply_.add(_amount);
+        balances[_to] = balances[_to].add(_amount);
+
+        if(_to != owner)
+            addTokenData(_to, _amount, now);
+
+        emit Mint(_to, _amount);
+
+        bytes memory empty;
+        emit Transfer(msg.sender, _to, _amount, empty);
+        return true;
+    }
+
 	// Function that is called when a user or another contract wants to transfer funds .
     function transfer(address _to, uint256 _amount, bytes _data) onlyOwner public returns (bool) {
         require(_to != address(0));
+        require(_to != owner);
         require(_amount <= balances[msg.sender]);
         require(_amount > 0);
 
@@ -232,6 +253,7 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
     // Added due to backwards compatibility reasons .
     function transfer(address _to, uint256 _amount) onlyOwner public returns (bool) {
         require(_to != address(0));
+        require(_to != owner);
         require(_amount <= balances[msg.sender]);
         require(_amount > 0);
 

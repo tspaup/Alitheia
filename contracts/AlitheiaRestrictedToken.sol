@@ -32,31 +32,6 @@ contract AlitheiaRestrictedToken is ERC223_ContractReceiver{
     return balances[_address];
   }
 
-  /**
-   * @dev Function to mint tokens
-   * @param _to The address that will receive the minted tokens.
-   * @param _amount The amount of tokens to mint.
-   * @return A boolean that indicates if the operation was successful.
-   */
-  function mint(address _to, uint256 _amount) onlyOwner public returns (bool){
-      totalSupply_ = totalSupply_.add(_amount);
-      balances[_to] = balances[_to].add(_amount);
-
-      emit Mint(_to, _amount);
-      
-      bytes memory empty;
-      emit Transfer(msg.sender, _to, _amount, empty);
-      return true;
-  }
-
-  /**
-   * @dev Burns a specific amount of tokens.
-   * @param _value The amount of token to be burned.
-   */
-  function burn(uint256 _value) public {
-    _burn(msg.sender, _value);
-  }
-
   function _burn(address _address, uint256 _amount) internal{
     require(_amount <= balances[_address]);
     require(_amount > 0);
