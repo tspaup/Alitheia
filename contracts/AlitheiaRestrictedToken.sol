@@ -33,6 +33,7 @@ contract AlitheiaRestrictedToken is ERC223_ContractReceiver{
   }
 
   function _burn(address _address, uint256 _amount) internal{
+    require(_address != address(0));
     require(_amount <= balances[_address]);
     require(_amount > 0);
 

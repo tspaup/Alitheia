@@ -11,14 +11,14 @@
     "absolutePath": "/Projects/Alitheia/contracts/StorageConsumer/StorageStateful.sol",
     "exportedSymbols": {
       "StorageStateful": [
-        5177
+        5216
       ]
     },
-    "id": 5178,
+    "id": 5217,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 5173,
+        "id": 5212,
         "literals": [
           "solidity",
           "^",
@@ -31,10 +31,10 @@
       {
         "absolutePath": "/Projects/Alitheia/contracts/Storage/BaseStorage.sol",
         "file": "../Storage/BaseStorage.sol",
-        "id": 5174,
+        "id": 5213,
         "nodeType": "ImportDirective",
-        "scope": 5178,
-        "sourceUnit": 5124,
+        "scope": 5217,
+        "sourceUnit": 5163,
         "src": "26:36:14",
         "symbolAliases": [],
         "unitAlias": ""
@@ -45,35 +45,35 @@
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": true,
-        "id": 5177,
+        "id": 5216,
         "linearizedBaseContracts": [
-          5177
+          5216
         ],
         "name": "StorageStateful",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "constant": false,
-            "id": 5176,
+            "id": 5215,
             "name": "_storage",
             "nodeType": "VariableDeclaration",
-            "scope": 5177,
+            "scope": 5216,
             "src": "93:20:14",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_BaseStorage_$5123",
+              "typeIdentifier": "t_contract$_BaseStorage_$5162",
               "typeString": "contract BaseStorage"
             },
             "typeName": {
               "contractScope": null,
-              "id": 5175,
+              "id": 5214,
               "name": "BaseStorage",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 5123,
+              "referencedDeclaration": 5162,
               "src": "93:11:14",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_BaseStorage_$5123",
+                "typeIdentifier": "t_contract$_BaseStorage_$5162",
                 "typeString": "contract BaseStorage"
               }
             },
@@ -81,7 +81,7 @@
             "visibility": "internal"
           }
         ],
-        "scope": 5178,
+        "scope": 5217,
         "src": "64:52:14"
       }
     ],
@@ -91,14 +91,14 @@
     "absolutePath": "/Projects/Alitheia/contracts/StorageConsumer/StorageStateful.sol",
     "exportedSymbols": {
       "StorageStateful": [
-        5177
+        5216
       ]
     },
-    "id": 5178,
+    "id": 5217,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 5173,
+        "id": 5212,
         "literals": [
           "solidity",
           "^",
@@ -111,10 +111,10 @@
       {
         "absolutePath": "/Projects/Alitheia/contracts/Storage/BaseStorage.sol",
         "file": "../Storage/BaseStorage.sol",
-        "id": 5174,
+        "id": 5213,
         "nodeType": "ImportDirective",
-        "scope": 5178,
-        "sourceUnit": 5124,
+        "scope": 5217,
+        "sourceUnit": 5163,
         "src": "26:36:14",
         "symbolAliases": [],
         "unitAlias": ""
@@ -125,35 +125,35 @@
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": true,
-        "id": 5177,
+        "id": 5216,
         "linearizedBaseContracts": [
-          5177
+          5216
         ],
         "name": "StorageStateful",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "constant": false,
-            "id": 5176,
+            "id": 5215,
             "name": "_storage",
             "nodeType": "VariableDeclaration",
-            "scope": 5177,
+            "scope": 5216,
             "src": "93:20:14",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_BaseStorage_$5123",
+              "typeIdentifier": "t_contract$_BaseStorage_$5162",
               "typeString": "contract BaseStorage"
             },
             "typeName": {
               "contractScope": null,
-              "id": 5175,
+              "id": 5214,
               "name": "BaseStorage",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 5123,
+              "referencedDeclaration": 5162,
               "src": "93:11:14",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_BaseStorage_$5123",
+                "typeIdentifier": "t_contract$_BaseStorage_$5162",
                 "typeString": "contract BaseStorage"
               }
             },
@@ -161,7 +161,7 @@
             "visibility": "internal"
           }
         ],
-        "scope": 5178,
+        "scope": 5217,
         "src": "64:52:14"
       }
     ],
@@ -173,5 +173,5 @@
   },
   "networks": {},
   "schemaVersion": "2.0.1",
-  "updatedAt": "2018-09-28T02:30:35.694Z"
+  "updatedAt": "2018-09-28T12:41:14.032Z"
 }

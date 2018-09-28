@@ -11,14 +11,14 @@
     "absolutePath": "/Projects/Alitheia/contracts/Storage/KeyValueStorage.sol",
     "exportedSymbols": {
       "KeyValueStorage": [
-        5154
+        5193
       ]
     },
-    "id": 5155,
+    "id": 5194,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 5125,
+        "id": 5164,
         "literals": [
           "solidity",
           "^",
@@ -34,19 +34,19 @@
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": true,
-        "id": 5154,
+        "id": 5193,
         "linearizedBaseContracts": [
-          5154
+          5193
         ],
         "name": "KeyValueStorage",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "constant": false,
-            "id": 5129,
+            "id": 5168,
             "name": "_uintStorage",
             "nodeType": "VariableDeclaration",
-            "scope": 5154,
+            "scope": 5193,
             "src": "55:40:12",
             "stateVariable": true,
             "storageLocation": "default",
@@ -55,9 +55,9 @@
               "typeString": "mapping(bytes32 => uint256)"
             },
             "typeName": {
-              "id": 5128,
+              "id": 5167,
               "keyType": {
-                "id": 5126,
+                "id": 5165,
                 "name": "bytes32",
                 "nodeType": "ElementaryTypeName",
                 "src": "63:7:12",
@@ -73,7 +73,7 @@
                 "typeString": "mapping(bytes32 => uint256)"
               },
               "valueType": {
-                "id": 5127,
+                "id": 5166,
                 "name": "uint256",
                 "nodeType": "ElementaryTypeName",
                 "src": "74:7:12",
@@ -88,10 +88,10 @@
           },
           {
             "constant": false,
-            "id": 5133,
+            "id": 5172,
             "name": "_stringStorage",
             "nodeType": "VariableDeclaration",
-            "scope": 5154,
+            "scope": 5193,
             "src": "99:41:12",
             "stateVariable": true,
             "storageLocation": "default",
@@ -100,9 +100,9 @@
               "typeString": "mapping(bytes32 => string)"
             },
             "typeName": {
-              "id": 5132,
+              "id": 5171,
               "keyType": {
-                "id": 5130,
+                "id": 5169,
                 "name": "bytes32",
                 "nodeType": "ElementaryTypeName",
                 "src": "107:7:12",
@@ -118,7 +118,7 @@
                 "typeString": "mapping(bytes32 => string)"
               },
               "valueType": {
-                "id": 5131,
+                "id": 5170,
                 "name": "string",
                 "nodeType": "ElementaryTypeName",
                 "src": "118:6:12",
@@ -133,10 +133,10 @@
           },
           {
             "constant": false,
-            "id": 5137,
+            "id": 5176,
             "name": "_addressStorage",
             "nodeType": "VariableDeclaration",
-            "scope": 5154,
+            "scope": 5193,
             "src": "144:43:12",
             "stateVariable": true,
             "storageLocation": "default",
@@ -145,9 +145,9 @@
               "typeString": "mapping(bytes32 => address)"
             },
             "typeName": {
-              "id": 5136,
+              "id": 5175,
               "keyType": {
-                "id": 5134,
+                "id": 5173,
                 "name": "bytes32",
                 "nodeType": "ElementaryTypeName",
                 "src": "152:7:12",
@@ -163,7 +163,7 @@
                 "typeString": "mapping(bytes32 => address)"
               },
               "valueType": {
-                "id": 5135,
+                "id": 5174,
                 "name": "address",
                 "nodeType": "ElementaryTypeName",
                 "src": "163:7:12",
@@ -178,10 +178,10 @@
           },
           {
             "constant": false,
-            "id": 5141,
+            "id": 5180,
             "name": "_bytesStorage",
             "nodeType": "VariableDeclaration",
-            "scope": 5154,
+            "scope": 5193,
             "src": "191:39:12",
             "stateVariable": true,
             "storageLocation": "default",
@@ -190,9 +190,9 @@
               "typeString": "mapping(bytes32 => bytes)"
             },
             "typeName": {
-              "id": 5140,
+              "id": 5179,
               "keyType": {
-                "id": 5138,
+                "id": 5177,
                 "name": "bytes32",
                 "nodeType": "ElementaryTypeName",
                 "src": "199:7:12",
@@ -208,7 +208,7 @@
                 "typeString": "mapping(bytes32 => bytes)"
               },
               "valueType": {
-                "id": 5139,
+                "id": 5178,
                 "name": "bytes",
                 "nodeType": "ElementaryTypeName",
                 "src": "210:5:12",
@@ -223,10 +223,10 @@
           },
           {
             "constant": false,
-            "id": 5145,
+            "id": 5184,
             "name": "_bytes32Storage",
             "nodeType": "VariableDeclaration",
-            "scope": 5154,
+            "scope": 5193,
             "src": "234:43:12",
             "stateVariable": true,
             "storageLocation": "default",
@@ -235,9 +235,9 @@
               "typeString": "mapping(bytes32 => bytes32)"
             },
             "typeName": {
-              "id": 5144,
+              "id": 5183,
               "keyType": {
-                "id": 5142,
+                "id": 5181,
                 "name": "bytes32",
                 "nodeType": "ElementaryTypeName",
                 "src": "242:7:12",
@@ -253,7 +253,7 @@
                 "typeString": "mapping(bytes32 => bytes32)"
               },
               "valueType": {
-                "id": 5143,
+                "id": 5182,
                 "name": "bytes32",
                 "nodeType": "ElementaryTypeName",
                 "src": "253:7:12",
@@ -268,10 +268,10 @@
           },
           {
             "constant": false,
-            "id": 5149,
+            "id": 5188,
             "name": "_boolStorage",
             "nodeType": "VariableDeclaration",
-            "scope": 5154,
+            "scope": 5193,
             "src": "281:37:12",
             "stateVariable": true,
             "storageLocation": "default",
@@ -280,9 +280,9 @@
               "typeString": "mapping(bytes32 => bool)"
             },
             "typeName": {
-              "id": 5148,
+              "id": 5187,
               "keyType": {
-                "id": 5146,
+                "id": 5185,
                 "name": "bytes32",
                 "nodeType": "ElementaryTypeName",
                 "src": "289:7:12",
@@ -298,7 +298,7 @@
                 "typeString": "mapping(bytes32 => bool)"
               },
               "valueType": {
-                "id": 5147,
+                "id": 5186,
                 "name": "bool",
                 "nodeType": "ElementaryTypeName",
                 "src": "300:4:12",
@@ -313,10 +313,10 @@
           },
           {
             "constant": false,
-            "id": 5153,
+            "id": 5192,
             "name": "_intStorage",
             "nodeType": "VariableDeclaration",
-            "scope": 5154,
+            "scope": 5193,
             "src": "322:38:12",
             "stateVariable": true,
             "storageLocation": "default",
@@ -325,9 +325,9 @@
               "typeString": "mapping(bytes32 => int256)"
             },
             "typeName": {
-              "id": 5152,
+              "id": 5191,
               "keyType": {
-                "id": 5150,
+                "id": 5189,
                 "name": "bytes32",
                 "nodeType": "ElementaryTypeName",
                 "src": "330:7:12",
@@ -343,7 +343,7 @@
                 "typeString": "mapping(bytes32 => int256)"
               },
               "valueType": {
-                "id": 5151,
+                "id": 5190,
                 "name": "int256",
                 "nodeType": "ElementaryTypeName",
                 "src": "341:6:12",
@@ -357,7 +357,7 @@
             "visibility": "internal"
           }
         ],
-        "scope": 5155,
+        "scope": 5194,
         "src": "26:337:12"
       }
     ],
@@ -367,14 +367,14 @@
     "absolutePath": "/Projects/Alitheia/contracts/Storage/KeyValueStorage.sol",
     "exportedSymbols": {
       "KeyValueStorage": [
-        5154
+        5193
       ]
     },
-    "id": 5155,
+    "id": 5194,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 5125,
+        "id": 5164,
         "literals": [
           "solidity",
           "^",
@@ -390,19 +390,19 @@
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": true,
-        "id": 5154,
+        "id": 5193,
         "linearizedBaseContracts": [
-          5154
+          5193
         ],
         "name": "KeyValueStorage",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "constant": false,
-            "id": 5129,
+            "id": 5168,
             "name": "_uintStorage",
             "nodeType": "VariableDeclaration",
-            "scope": 5154,
+            "scope": 5193,
             "src": "55:40:12",
             "stateVariable": true,
             "storageLocation": "default",
@@ -411,9 +411,9 @@
               "typeString": "mapping(bytes32 => uint256)"
             },
             "typeName": {
-              "id": 5128,
+              "id": 5167,
               "keyType": {
-                "id": 5126,
+                "id": 5165,
                 "name": "bytes32",
                 "nodeType": "ElementaryTypeName",
                 "src": "63:7:12",
@@ -429,7 +429,7 @@
                 "typeString": "mapping(bytes32 => uint256)"
               },
               "valueType": {
-                "id": 5127,
+                "id": 5166,
                 "name": "uint256",
                 "nodeType": "ElementaryTypeName",
                 "src": "74:7:12",
@@ -444,10 +444,10 @@
           },
           {
             "constant": false,
-            "id": 5133,
+            "id": 5172,
             "name": "_stringStorage",
             "nodeType": "VariableDeclaration",
-            "scope": 5154,
+            "scope": 5193,
             "src": "99:41:12",
             "stateVariable": true,
             "storageLocation": "default",
@@ -456,9 +456,9 @@
               "typeString": "mapping(bytes32 => string)"
             },
             "typeName": {
-              "id": 5132,
+              "id": 5171,
               "keyType": {
-                "id": 5130,
+                "id": 5169,
                 "name": "bytes32",
                 "nodeType": "ElementaryTypeName",
                 "src": "107:7:12",
@@ -474,7 +474,7 @@
                 "typeString": "mapping(bytes32 => string)"
               },
               "valueType": {
-                "id": 5131,
+                "id": 5170,
                 "name": "string",
                 "nodeType": "ElementaryTypeName",
                 "src": "118:6:12",
@@ -489,10 +489,10 @@
           },
           {
             "constant": false,
-            "id": 5137,
+            "id": 5176,
             "name": "_addressStorage",
             "nodeType": "VariableDeclaration",
-            "scope": 5154,
+            "scope": 5193,
             "src": "144:43:12",
             "stateVariable": true,
             "storageLocation": "default",
@@ -501,9 +501,9 @@
               "typeString": "mapping(bytes32 => address)"
             },
             "typeName": {
-              "id": 5136,
+              "id": 5175,
               "keyType": {
-                "id": 5134,
+                "id": 5173,
                 "name": "bytes32",
                 "nodeType": "ElementaryTypeName",
                 "src": "152:7:12",
@@ -519,7 +519,7 @@
                 "typeString": "mapping(bytes32 => address)"
               },
               "valueType": {
-                "id": 5135,
+                "id": 5174,
                 "name": "address",
                 "nodeType": "ElementaryTypeName",
                 "src": "163:7:12",
@@ -534,10 +534,10 @@
           },
           {
             "constant": false,
-            "id": 5141,
+            "id": 5180,
             "name": "_bytesStorage",
             "nodeType": "VariableDeclaration",
-            "scope": 5154,
+            "scope": 5193,
             "src": "191:39:12",
             "stateVariable": true,
             "storageLocation": "default",
@@ -546,9 +546,9 @@
               "typeString": "mapping(bytes32 => bytes)"
             },
             "typeName": {
-              "id": 5140,
+              "id": 5179,
               "keyType": {
-                "id": 5138,
+                "id": 5177,
                 "name": "bytes32",
                 "nodeType": "ElementaryTypeName",
                 "src": "199:7:12",
@@ -564,7 +564,7 @@
                 "typeString": "mapping(bytes32 => bytes)"
               },
               "valueType": {
-                "id": 5139,
+                "id": 5178,
                 "name": "bytes",
                 "nodeType": "ElementaryTypeName",
                 "src": "210:5:12",
@@ -579,10 +579,10 @@
           },
           {
             "constant": false,
-            "id": 5145,
+            "id": 5184,
             "name": "_bytes32Storage",
             "nodeType": "VariableDeclaration",
-            "scope": 5154,
+            "scope": 5193,
             "src": "234:43:12",
             "stateVariable": true,
             "storageLocation": "default",
@@ -591,9 +591,9 @@
               "typeString": "mapping(bytes32 => bytes32)"
             },
             "typeName": {
-              "id": 5144,
+              "id": 5183,
               "keyType": {
-                "id": 5142,
+                "id": 5181,
                 "name": "bytes32",
                 "nodeType": "ElementaryTypeName",
                 "src": "242:7:12",
@@ -609,7 +609,7 @@
                 "typeString": "mapping(bytes32 => bytes32)"
               },
               "valueType": {
-                "id": 5143,
+                "id": 5182,
                 "name": "bytes32",
                 "nodeType": "ElementaryTypeName",
                 "src": "253:7:12",
@@ -624,10 +624,10 @@
           },
           {
             "constant": false,
-            "id": 5149,
+            "id": 5188,
             "name": "_boolStorage",
             "nodeType": "VariableDeclaration",
-            "scope": 5154,
+            "scope": 5193,
             "src": "281:37:12",
             "stateVariable": true,
             "storageLocation": "default",
@@ -636,9 +636,9 @@
               "typeString": "mapping(bytes32 => bool)"
             },
             "typeName": {
-              "id": 5148,
+              "id": 5187,
               "keyType": {
-                "id": 5146,
+                "id": 5185,
                 "name": "bytes32",
                 "nodeType": "ElementaryTypeName",
                 "src": "289:7:12",
@@ -654,7 +654,7 @@
                 "typeString": "mapping(bytes32 => bool)"
               },
               "valueType": {
-                "id": 5147,
+                "id": 5186,
                 "name": "bool",
                 "nodeType": "ElementaryTypeName",
                 "src": "300:4:12",
@@ -669,10 +669,10 @@
           },
           {
             "constant": false,
-            "id": 5153,
+            "id": 5192,
             "name": "_intStorage",
             "nodeType": "VariableDeclaration",
-            "scope": 5154,
+            "scope": 5193,
             "src": "322:38:12",
             "stateVariable": true,
             "storageLocation": "default",
@@ -681,9 +681,9 @@
               "typeString": "mapping(bytes32 => int256)"
             },
             "typeName": {
-              "id": 5152,
+              "id": 5191,
               "keyType": {
-                "id": 5150,
+                "id": 5189,
                 "name": "bytes32",
                 "nodeType": "ElementaryTypeName",
                 "src": "330:7:12",
@@ -699,7 +699,7 @@
                 "typeString": "mapping(bytes32 => int256)"
               },
               "valueType": {
-                "id": 5151,
+                "id": 5190,
                 "name": "int256",
                 "nodeType": "ElementaryTypeName",
                 "src": "341:6:12",
@@ -713,7 +713,7 @@
             "visibility": "internal"
           }
         ],
-        "scope": 5155,
+        "scope": 5194,
         "src": "26:337:12"
       }
     ],
@@ -725,5 +725,5 @@
   },
   "networks": {},
   "schemaVersion": "2.0.1",
-  "updatedAt": "2018-09-28T02:30:35.685Z"
+  "updatedAt": "2018-09-28T12:41:14.031Z"
 }

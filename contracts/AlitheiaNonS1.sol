@@ -171,7 +171,7 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
         uint256 amount = clearUnlockedBalanceOf(_address, now);
         
         if(amount > 0){
-            _burn(msg.sender, amount);
+            _burn(_address, amount);
             return amount;
         }else
             return 0;
@@ -206,6 +206,22 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
         /* Saving Tokens to the variable */
         holderTokens[_address][year][month][day].amount = holderTokens[_address][year][month][day].amount.add(_amount);
         holderTokens[_address][year][month][day].packages.push(Package(_amount, timestamp, lockTime));
+    }
+
+    /**
+     * @dev Function to burn owner tokens
+     */
+    function burnOwner(uint256 _amount) onlyOwner public{
+        _burn(msg.sender, _amount);
+    }
+
+    /**
+     * @dev Function to burn holder tokens
+     */
+    function burn() public {
+        uint256 amount = clearUnlockedBalanceOf(msg.sender, now);
+        
+        _burn(msg.sender, amount);
     }
 
     /**
