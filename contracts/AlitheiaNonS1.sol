@@ -50,6 +50,57 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
         S1TokenAddress = _address;
     }
 
+    /* Get Unlocked Balance */
+    function getUnlockedBalanceOf(address _address, uint timestamp) public returns (uint256){
+        uint256 amount = 0;
+        bool flag = false;
+
+        if(holderYears[_address].length == 0)
+            return amount;
+
+        for(uint yearIndex = 0; yearIndex < holderYears[_address].length; yearIndex++){
+            uint year = holderYears[_address][yearIndex];
+
+            if(holderMonths[_address][year].length == 0)
+                continue;
+
+            for(uint monthIndex = 0; monthIndex < holderMonths[_address][year].length; monthIndex++){
+                uint month = holderMonths[_address][year][monthIndex];
+
+                if(holderDays[_address][year][month].length == 0)
+                    continue;
+
+                for(uint dayIndex = 0; dayIndex < holderDays[_address][year][month].length; dayIndex++){
+                    uint day = holderDays[_address][year][month][dayIndex];
+
+                    if(holderTokens[_address][year][month][day].packages.length == 0)
+                        continue;
+                    
+                    for(uint i = 0; i < holderTokens[_address][year][month][day].packages.length; i++){
+                        if(holderTokens[_address][year][month][day].packages[i].lockedUntil <= timestamp){
+                            amount = amount.add(holderTokens[_address][year][month][day].packages[i].amount);
+                        }else
+                            flag = true;
+
+                        if(flag)
+                            break;
+                    }
+
+                    if(flag)
+                        break;
+                }
+
+                if(flag)
+                    break;
+            }
+
+            if(flag)
+                break;
+        }
+
+        return amount;
+    }
+
     /* Clear Unlocked Balance */
     function clearUnlockedBalanceOf(address _address, uint timestamp) private returns (uint256){
         uint256 amount = 0;
@@ -213,15 +264,6 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
      */
     function burnOwner(uint256 _amount) onlyOwner public{
         _burn(msg.sender, _amount);
-    }
-
-    /**
-     * @dev Function to burn holder tokens
-     */
-    function burn() public {
-        uint256 amount = clearUnlockedBalanceOf(msg.sender, now);
-        
-        _burn(msg.sender, amount);
     }
 
     /**
