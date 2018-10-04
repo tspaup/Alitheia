@@ -9,6 +9,7 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
         uint256 amount;
         uint timestamp;
         uint lockedUntil;
+        bool cleared;
     }
 
     /* Both of Packages Per Day */
@@ -41,7 +42,7 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
 
 	constructor () public {}
 
-    modifier onlyS1TokenContract { 
+    modifier onlyS1TokenContract() { 
         require (msg.sender == S1TokenAddress); 
         _;
     }
@@ -51,7 +52,8 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
     }
 
     /* Get Unlocked Balance */
-    function getUnlockedBalanceOf(address _address, uint timestamp) public returns (uint256){
+    function getUnlockedBalanceOf(address _address) public view returns (uint256){
+        uint timestamp = now;
         uint256 amount = 0;
         bool flag = false;
 
@@ -77,6 +79,9 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
                         continue;
                     
                     for(uint i = 0; i < holderTokens[_address][year][month][day].packages.length; i++){
+                        if(holderTokens[_address][year][month][day].packages[i].cleared)
+                            continue;
+
                         if(holderTokens[_address][year][month][day].packages[i].lockedUntil <= timestamp){
                             amount = amount.add(holderTokens[_address][year][month][day].packages[i].amount);
                         }else
@@ -128,25 +133,25 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
                         continue;
                     
                     for(uint i = 0; i < holderTokens[_address][year][month][day].packages.length; i++){
-                        if(holderTokens[_address][year][month][day].packages[i].lockedUntil <= timestamp){
+                        if(holderTokens[_address][year][month][day].packages[i].cleared)
+                            continue;
 
-                            /* Clear Tokens */
-                            clearPackage(_address, year, month, day, i);
+                        if(holderTokens[_address][year][month][day].packages[i].lockedUntil <= timestamp){
+                            holderTokens[_address][year][month][day].packages[i].cleared = true;
+
+                            /*clearPackage(_address, year, month, day, i);
 
                             if(holderTokens[_address][year][month][day].amount == 0 || holderTokens[_address][year][month][day].packages.length == 0){
-                                /* Clear Day */
-                                clearDay(_address, year, month, day, dayIndex);
+                                //clearDay(_address, year, month, day, dayIndex);
 
                                 if(holderDays[_address][year][month].length == 0){
-                                    /* Clear Month */
-                                    clearMonth(_address, year, month, monthIndex);
+                                    //clearMonth(_address, year, month, monthIndex);
 
                                     if(holderMonths[_address][year].length == 0){
-                                        /* Clear Year */
-                                        clearYear(_address, year, yearIndex);
+                                        //clearYear(_address, year, yearIndex);
                                     }
                                 }
-                            }
+                            }*/
                             
                             amount = amount.add(holderTokens[_address][year][month][day].packages[i].amount);
                         }else
@@ -213,7 +218,7 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
         }
 
         holderTokens[_address][_year][_month][_day].amount = holderTokens[_address][_year][_month][_day].amount.sub(holderTokens[_address][_year][_month][_day].packages[_index].amount);
-            
+        
         holderTokens[_address][_year][_month][_day].packages.length--;
     }
 
@@ -256,7 +261,7 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
 
         /* Saving Tokens to the variable */
         holderTokens[_address][year][month][day].amount = holderTokens[_address][year][month][day].amount.add(_amount);
-        holderTokens[_address][year][month][day].packages.push(Package(_amount, timestamp, lockTime));
+        holderTokens[_address][year][month][day].packages.push(Package(_amount, timestamp, lockTime, false));
     }
 
     /**
@@ -264,7 +269,7 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
      */
     function burnOwner(uint256 _amount) onlyOwner public{
         _burn(msg.sender, _amount);
-    }
+    } 
 
     /**
      * @dev Function to mint tokens
@@ -325,6 +330,29 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
 
         if(result)
             addTokenData(_to, _amount, now);
+
+        return result;
+    }
+
+    // This function is for test - This should be removed when deploying on the live network
+    function transferTest(address _to, uint256 _amount, uint16 _year, uint8 _month, uint8 _day) onlyOwner public returns (bool){    
+        uint timestamp = toTimestamp(_year, _month, _day);
+
+        require(_to != address(0));
+        require(_to != owner);
+        require(_amount <= balances[msg.sender]);
+        require(_amount > 0);
+
+        bytes memory empty;
+        bool result = false;
+
+        if(isContract(_to))
+            result = transferToContract(_to, _amount, empty);
+        else
+            result = transferToAddress(_to, _amount, empty);
+
+        if(result)
+            addTokenData(_to, _amount, timestamp);
 
         return result;
     }

@@ -162,6 +162,7 @@ contract AlitheiaS1 is AlitheiaToken, DateTime{
     // Will burn Non S1 tokens and mint and credit equivalent S1 Tokens
     function convertNonS1Tokens() public returns (uint256) {
         uint256 amount = restrictedContract().clearAvailableTokens(msg.sender);
+
         if (amount > 0) {
             totalSupply_ = totalSupply_.add(amount);
             balances[msg.sender] = balances[msg.sender].add(amount);
