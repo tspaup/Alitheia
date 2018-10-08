@@ -20,15 +20,6 @@ contract('AlitheiaNonS1', () => {
     })
   })
 
-  describe('burn 100000 from account1', () => {
-  	it('should equal to account1 token balance - 400000', async () => {
-  		await nonS1Token.burn(100000, {from: accounts[1]})
-  		const data = await nonS1Token.balanceOf(accounts[1])
-
-    	assert.equal(data.toNumber(), 400000, 'Balance is wrong!');
-  	})
-  })
-
   describe('transfer 100000 from account0 to account1', () => {
   	it('should equal to account0 - 400000', async () => {
   		await nonS1Token.transfer(accounts[1], 100000, {from: accounts[0]})
@@ -44,6 +35,9 @@ contract('AlitheiaNonS1', () => {
 
     	const days = await nonS1Token.getHolderDays(accounts[1], 2018, 9, {from: accounts[0]})
     	console.log('account1 days - ' + JSON.stringify(days))
+
+      const test = await nonS1Token.test({from: accounts[0]})
+      console.log('test value - ' + test)
   	})
   })
 });

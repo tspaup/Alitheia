@@ -40,7 +40,20 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
         mapping(address => mapping (uint => mapping (uint => mapping (uint => PackageDay)))) private holderTokens;
     /* Token Variables End */
 
-	constructor () public {}
+    /* Last Clearing Variables */
+        bool private isClearing;
+        bool private flag;
+
+        mapping(address => uint) private lastYearIndex;
+        mapping(address => uint) private lastMonthIndex;
+        mapping(address => uint) private lastDayIndex;
+        mapping(address => uint) private lastPackageIndex;
+    /* Last Clearing Variables End */
+
+	constructor () public {
+        isClearing = false;
+        flag = false;
+    }
 
     modifier onlyS1TokenContract() { 
         require (msg.sender == S1TokenAddress); 
@@ -51,53 +64,150 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
         S1TokenAddress = _address;
     }
 
-    /* Get Unlocked Balance */
-    function getUnlockedBalanceOf(address _address) public view returns (uint256){
-        uint timestamp = now;
+    /* Save Last Clearing Data */
+    function saveLastClearingData(address _address, uint _yearIndex, uint _monthIndex, uint _dayIndex, uint _packageIndex) private {
+        uint year = holderYears[_address][_yearIndex];
+        uint month = holderMonths[_address][year][_monthIndex];
+        uint day = holderDays[_address][year][month][_dayIndex];
+        
+        if(_packageIndex < holderTokens[_address][year][month][day].packages.length - 1){
+            lastYearIndex[_address] = _yearIndex;
+            lastMonthIndex[_address] = _monthIndex;
+            lastDayIndex[_address] = _dayIndex;
+            lastPackageIndex[_address] = _packageIndex + 1;
+        }else{
+            lastPackageIndex[_address] = 0;
+            
+            if(_dayIndex < holderDays[_address][year][month].length - 1){
+                lastYearIndex[_address] = _yearIndex;
+                lastMonthIndex[_address] = _monthIndex;
+                lastDayIndex[_address] = _dayIndex + 1;
+            }else{
+                lastDayIndex[_address] = 0;
+
+                if(_monthIndex < holderMonths[_address][year].length - 1){
+                    lastYearIndex[_address] = _yearIndex;
+                    lastMonthIndex[_address] = _monthIndex + 1;
+                }else{
+                    lastYearIndex[_address] = _yearIndex + 1;
+                    lastMonthIndex[_address] = 0;
+                }
+            }
+        }
+    }
+
+    /* Get Start Day Index for Clearing */
+    function getStartingDayIndex(address _address, uint _yearIndex, uint _monthIndex) private view returns (uint){
+        uint startingDayIndex = lastDayIndex[_address];
+        if(_yearIndex != lastYearIndex[_address] || _monthIndex != lastMonthIndex[_address])
+            startingDayIndex = 0;
+
+        return startingDayIndex;
+    }
+
+    /* Get Start Package Index for Clearing */
+    function getStartingPackageIndex(address _address, uint _yearIndex, uint _monthIndex, uint _dayIndex) private view returns (uint){
+        uint startingPackageIndex = lastPackageIndex[_address];
+        if(_yearIndex != lastYearIndex[_address] || _monthIndex != lastMonthIndex[_address] || _dayIndex != lastDayIndex[_address])
+            startingPackageIndex = 0;
+
+        return startingPackageIndex;
+    }
+
+    /* Get Unlocked Balance By Day */
+    function getUnlockedBalanceByDay(address _address, uint _yearIndex, uint _monthIndex, uint _dayIndex, uint timestamp) private returns (uint256){
         uint256 amount = 0;
-        bool flag = false;
+        
+        uint year = holderYears[_address][_yearIndex];
+        uint month = holderMonths[_address][year][_monthIndex];
+        uint day = holderDays[_address][year][month][_dayIndex];
+        uint length = holderTokens[_address][year][month][day].packages.length;
 
-        if(holderYears[_address].length == 0)
-            return amount;
+        if(length == 0)
+            return 0;
 
-        for(uint yearIndex = 0; yearIndex < holderYears[_address].length; yearIndex++){
-            uint year = holderYears[_address][yearIndex];
-
-            if(holderMonths[_address][year].length == 0)
+        for(uint i = getStartingPackageIndex(_address, _yearIndex, _monthIndex, _dayIndex); i < length; i++){
+            if(holderTokens[_address][year][month][day].packages[i].cleared)
                 continue;
 
-            for(uint monthIndex = 0; monthIndex < holderMonths[_address][year].length; monthIndex++){
-                uint month = holderMonths[_address][year][monthIndex];
+            if(holderTokens[_address][year][month][day].packages[i].lockedUntil <= timestamp){
+                amount = amount.add(holderTokens[_address][year][month][day].packages[i].amount);
 
-                if(holderDays[_address][year][month].length == 0)
-                    continue;
-
-                for(uint dayIndex = 0; dayIndex < holderDays[_address][year][month].length; dayIndex++){
-                    uint day = holderDays[_address][year][month][dayIndex];
-
-                    if(holderTokens[_address][year][month][day].packages.length == 0)
-                        continue;
-                    
-                    for(uint i = 0; i < holderTokens[_address][year][month][day].packages.length; i++){
-                        if(holderTokens[_address][year][month][day].packages[i].cleared)
-                            continue;
-
-                        if(holderTokens[_address][year][month][day].packages[i].lockedUntil <= timestamp){
-                            amount = amount.add(holderTokens[_address][year][month][day].packages[i].amount);
-                        }else
-                            flag = true;
-
-                        if(flag)
-                            break;
-                    }
-
-                    if(flag)
-                        break;
-                }
-
-                if(flag)
-                    break;
+                if(isClearing)
+                    saveLastClearingData(_address, _yearIndex, _monthIndex, _dayIndex, i);
             }
+            else
+                flag = true;
+
+            if(flag)
+                break;
+        }
+
+        return amount;
+    }   
+
+    /* Get Unlocked Balance By Month */
+    function getUnlockedBalanceByMonth(address _address, uint _yearIndex, uint _monthIndex, uint timestamp) private returns (uint256){
+        uint year = holderYears[_address][_yearIndex];
+        uint month = holderMonths[_address][year][_monthIndex];
+        uint length = holderDays[_address][year][month].length;
+        if(length == 0)
+            return 0;
+
+        uint startingDayIndex = getStartingDayIndex(_address, _yearIndex, _monthIndex);
+        if(startingDayIndex >= length)
+            return 0;
+
+        uint256 amount = 0;
+        
+        for(uint _dayIndex = startingDayIndex; _dayIndex < length; _dayIndex++){
+            amount = amount.add(getUnlockedBalanceByDay(_address, _yearIndex, _monthIndex, _dayIndex, timestamp));
+
+            if(flag)
+                break;
+        }
+
+        return amount;
+    }
+
+    /* Get Unlocked Balance By Year */
+    function getUnlockedBalanceByYear(address _address, uint _yearIndex, uint timestamp) private returns (uint256){
+        uint256 amount = 0;
+        
+        uint year = holderYears[_address][_yearIndex];
+
+        if(holderMonths[_address][year].length == 0)
+            return 0;
+
+        uint startingMonthIndex = lastMonthIndex[_address];
+        if(_yearIndex != lastYearIndex[_address])
+            startingMonthIndex = 0;
+
+        if(startingMonthIndex >= holderMonths[_address][year].length)
+            return 0;
+
+        for(uint _monthIndex = startingMonthIndex; _monthIndex < holderMonths[_address][year].length; _monthIndex++){
+            amount = amount.add(getUnlockedBalanceByMonth(_address, _yearIndex, _monthIndex, timestamp));
+            
+            if(flag)
+                break;
+        }
+
+        return amount;
+    }
+
+    /* Get Unlocked Balance */
+    function getUnlockedBalanceOf(address _address) public returns (uint256){
+        isClearing = false;
+        flag = false;
+
+        uint256 amount = 0;
+        
+        if(holderYears[_address].length == 0 || lastYearIndex[_address] >= holderYears[_address].length)
+            return amount;
+
+        for(uint yearIndex = lastYearIndex[_address]; yearIndex < holderYears[_address].length; yearIndex++){
+            amount = amount.add(getUnlockedBalanceByYear(_address, yearIndex, now));
 
             if(flag)
                 break;
@@ -108,118 +218,22 @@ contract AlitheiaNonS1 is AlitheiaRestrictedToken, DateTime{
 
     /* Clear Unlocked Balance */
     function clearUnlockedBalanceOf(address _address, uint timestamp) private returns (uint256){
-        uint256 amount = 0;
-        bool flag = false;
+        isClearing = true;
+        flag = false;
 
-        if(holderYears[_address].length == 0)
+        uint256 amount = 0;
+        
+        if(holderYears[_address].length == 0 || lastYearIndex[_address] >= holderYears[_address].length)
             return amount;
 
-        for(uint yearIndex = 0; yearIndex < holderYears[_address].length; yearIndex++){
-            uint year = holderYears[_address][yearIndex];
-
-            if(holderMonths[_address][year].length == 0)
-                continue;
-
-            for(uint monthIndex = 0; monthIndex < holderMonths[_address][year].length; monthIndex++){
-                uint month = holderMonths[_address][year][monthIndex];
-
-                if(holderDays[_address][year][month].length == 0)
-                    continue;
-
-                for(uint dayIndex = 0; dayIndex < holderDays[_address][year][month].length; dayIndex++){
-                    uint day = holderDays[_address][year][month][dayIndex];
-
-                    if(holderTokens[_address][year][month][day].packages.length == 0)
-                        continue;
-                    
-                    for(uint i = 0; i < holderTokens[_address][year][month][day].packages.length; i++){
-                        if(holderTokens[_address][year][month][day].packages[i].cleared)
-                            continue;
-
-                        if(holderTokens[_address][year][month][day].packages[i].lockedUntil <= timestamp){
-                            holderTokens[_address][year][month][day].packages[i].cleared = true;
-
-                            /*clearPackage(_address, year, month, day, i);
-
-                            if(holderTokens[_address][year][month][day].amount == 0 || holderTokens[_address][year][month][day].packages.length == 0){
-                                //clearDay(_address, year, month, day, dayIndex);
-
-                                if(holderDays[_address][year][month].length == 0){
-                                    //clearMonth(_address, year, month, monthIndex);
-
-                                    if(holderMonths[_address][year].length == 0){
-                                        //clearYear(_address, year, yearIndex);
-                                    }
-                                }
-                            }*/
-                            
-                            amount = amount.add(holderTokens[_address][year][month][day].packages[i].amount);
-                        }else
-                            flag = true;
-
-                        if(flag)
-                            break;
-                    }
-
-                    if(flag)
-                        break;
-                }
-
-                if(flag)
-                    break;
-            }
+        for(uint yearIndex = lastYearIndex[_address]; yearIndex < holderYears[_address].length; yearIndex++){
+            amount = amount.add(getUnlockedBalanceByYear(_address, yearIndex, timestamp));
 
             if(flag)
                 break;
         }
 
         return amount;
-    }
-
-    /* Clear Year By Index */
-    function clearYear(address _address, uint _year, uint _index) private{
-        if(_index < holderYears[_address].length - 1){
-            for(uint i = _index; i < holderYears[_address].length - 1; i++)
-                holderYears[_address][i] = holderYears[_address][i+1];
-        }
-
-        holderYears[_address].length--;
-        holderYearExist[_address][_year] = false;
-    }
-
-    /* Clear Month By Index */
-    function clearMonth(address _address, uint _year, uint _month, uint _index) private{
-        if(_index < holderMonths[_address][_year].length - 1){
-            for(uint i = _index; i < holderMonths[_address][_year].length - 1; i++)
-                holderMonths[_address][_year][i] = holderMonths[_address][_year][i+1];
-        }
-
-        holderMonths[_address][_year].length--;
-        holderMonthExist[_address][_year][_month] = false;
-    }
-
-    /* Clear Day By Index */
-    function clearDay(address _address, uint _year, uint _month, uint _day, uint _index) private{
-        if(_index < holderDays[_address][_year][_month].length - 1){
-            for(uint i = _index; i < holderDays[_address][_year][_month].length - 1; i++)
-                holderDays[_address][_year][_month][i] = holderDays[_address][_year][_month][i+1];
-        }
-
-        holderDays[_address][_year][_month].length--;
-        holderDayExist[_address][_year][_month][_day] = false;
-    }
-
-    /* Clear Package By Index */
-    function clearPackage(address _address, uint _year, uint _month, uint _day, uint _index) private{
-        if(_index < holderTokens[_address][_year][_month][_day].packages.length - 1){
-            for(uint i = _index; i < holderTokens[_address][_year][_month][_day].packages.length - 1; i++){
-                holderTokens[_address][_year][_month][_day].packages[i] = holderTokens[_address][_year][_month][_day].packages[i+1];
-            }
-        }
-
-        holderTokens[_address][_year][_month][_day].amount = holderTokens[_address][_year][_month][_day].amount.sub(holderTokens[_address][_year][_month][_day].packages[_index].amount);
-        
-        holderTokens[_address][_year][_month][_day].packages.length--;
     }
 
     /* Clear Available Non S1 Tokens */
